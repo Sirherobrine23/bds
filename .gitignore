@@ -1,0 +1,16 @@
+# Node module
+node_modules/
+
+## Ignore any locker files in root repository
+/*-lock*
+
+## Typescript
+*.tsbuildinfo
+web/**/*.d.ts
+web/**/*.js
+
+# Config file
+*.ini
+
+# Database
+*.db

@@ -1,0 +1,14 @@
+{
+  "type": "module",
+  "dependencies": {
+    "htmx.org": "^1.9.12",
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "ts-loader": "^9.5.1",
+    "vue": "^3.4.38",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
