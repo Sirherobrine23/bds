@@ -37,6 +37,19 @@ func init() {
 		}
 	})
 
+	WebRoute.HandleFunc("GET /server/{id}", func(w http.ResponseWriter, r *http.Request) {
+		info := webTemplates.LoadTemplate("server/server/control.tmpl")
+		if info == nil {
+			utils.JsonResponse(w, 500, map[string]string{"error": "not found"})
+			return
+		}
+
+		if err := info.Execute(w, map[string]any{"Title": "test"}); err != nil {
+			utils.JsonResponse(w, 500, map[string]string{"error": err.Error()})
+			return
+		}
+	})
+
 	WebRoute.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		info := webTemplates.LoadTemplate("public/home.tmpl")
 		if info == nil {

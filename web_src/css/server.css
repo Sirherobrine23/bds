@@ -1,0 +1,26 @@
+#controlBase {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  height: 89%;
+}
+
+
+#controlBase .serverContent {
+  width: 100%;
+}
+
+#controlBase .serverNavbar {
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#controlBase .serverNavbar > * {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
