@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{if .Title}}{{.Title}} - {{end}}Minecraft Maneger</title>
-  {{template "base/head_script.tmpl" .}}
+  <!-- Load css -->
+  <link rel="stylesheet" href="/css/global.css">
+  <!-- HTMX load -->
+  <script src="/js/index.js"></script>
 </head>
 <body>
+  {{if not .PageIsInstall}}
+    {{template "base/head_navbar.tmpl" .}}
+  {{end}}
+{{if false}}
+</body>
+</html>
+{{end}}

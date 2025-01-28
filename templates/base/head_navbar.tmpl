@@ -1,0 +1,20 @@
+<nav id="navbar">
+  <div class="navbar-left">
+    <a href="/" >
+      <img src="/img/logo.svg" width="30" height="30" aria-hidden="true" alt="logo">
+    </a>
+  </div>
+  <div class="navbar-right">
+    {{if .Signed}}
+    <div>
+      <div>
+        <img src="/user/img" width="30" height="30" aria-hidden="true" alt="user">
+      </div>
+    </div>
+    {{else}}
+    <div>
+      <a href="/login">Login</a>
+    </div>
+    {{end}}
+  </div>
+</nav>

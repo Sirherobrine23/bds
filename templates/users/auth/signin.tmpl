@@ -1,0 +1,22 @@
+{{template "base/head.tmpl" . }}
+<div role="main">
+  <div>
+    <div id="loginarea">
+      <div>
+        <h4>Login to Dashboard</h4>
+        <form action="/login" method="post">
+          <div>
+            <input type="email" name="email">
+          </div>
+          <div>
+            <input type="password" name="password">
+          </div>
+          <div>
+            <input type="submit" value="Login">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{template "base/footer.tmpl" . }}

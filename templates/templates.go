@@ -2,14 +2,16 @@ package webTemplates
 
 import (
 	"embed"
+	"fmt"
+	"html/template"
+	"io"
 	"io/fs"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 var (
-	//go:embed **/*.tmpl
+	//go:embed */*
 	TemplatesFiles embed.FS
 
 	WebTemplate *template.Template // Root templates
@@ -41,4 +43,20 @@ func LoadTemplate(load string) *template.Template {
 		return nil
 	}
 	return WebTemplate.Lookup(load)
+}
+
+type ErrData struct {
+	Title                 string
+	Signed, PageIsInstall bool
+	ErrorMSg              string
+}
+
+func StatusTemplate(w io.Writer, IsSigned bool, err error) {
+	templateStatus := WebTemplate.Lookup("status/500.tmpl")
+	fmt.Println(templateStatus.Execute(w, ErrData{
+		Title:         "Internal Error",
+		Signed:        IsSigned,
+		PageIsInstall: false,
+		ErrorMSg:      err.Error(),
+	}))
 }

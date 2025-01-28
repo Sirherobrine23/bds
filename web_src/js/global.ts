@@ -1,2 +1,2 @@
-import htmx from 'htmx.org/dist/htmx.esm.js';
+import htmx from 'htmx.org';
 window.htmx = htmx;

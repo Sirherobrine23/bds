@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "type": "go",
+      "request": "launch",
+      "name": "Launch Program",
+      "mode": "auto",
+      "program": "${workspaceFolder}/main.go",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "web"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "programPath",
+      "description": "Path to the Go file or folder to debug"
+    }
+  ]
+}

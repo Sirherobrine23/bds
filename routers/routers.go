@@ -57,7 +57,9 @@ func init() {
 	Router.Handle("/api/v1/", http.StripPrefix("/api/v1", APIv1))
 
 	// Static files
-	Router.Handle("GET /js/", http.FileServer(http.FS(web.StatisFiles)))
-	Router.Handle("GET /css/", http.FileServer(http.FS(web.StatisFiles)))
+	statisFiles := http.FileServer(http.FS(web.StatisFiles))
+	Router.Handle("GET /js/", statisFiles)
+	Router.Handle("GET /css/", statisFiles)
+	Router.Handle("GET /img/", statisFiles)
 	Router.Handle("/", WebRoute)
 }

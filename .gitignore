@@ -4,10 +4,13 @@ node_modules/
 ## Ignore any locker files in root repository
 /*-lock*
 
+# Golang
+/__debug_bin*
+
 ## Typescript
 *.tsbuildinfo
-web/**/*.d.ts
-web/**/*.js
+web_src/**/*.d.ts
+web_src/**/*.js
 
 # Config file
 *.ini
