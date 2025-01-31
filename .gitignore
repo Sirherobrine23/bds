@@ -1,19 +1,12 @@
-# Node module
+# Node.js
 node_modules/
-
-## Ignore any locker files in root repository
 /*-lock*
-
-# Golang
-/__debug_bin*
-
-## Typescript
 *.tsbuildinfo
 web_src/**/*.d.ts
 web_src/**/*.js
 
-# Config file
+# Go and project files
 *.ini
-
-# Database
 *.db
+/bds
+/__debug_bin*

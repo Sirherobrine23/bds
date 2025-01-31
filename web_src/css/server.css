@@ -5,13 +5,11 @@
   height: 89%;
 }
 
-
 #controlBase .serverContent {
   width: 100%;
 }
 
 #controlBase .serverNavbar {
-  width: 120px;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
@@ -19,8 +17,22 @@
   align-items: flex-start;
 }
 
-#controlBase .serverNavbar > * {
-  height: 100%;
+#controlBase .serverNavbar .itemServer {
+  flex-grow: 1;
   display: flex;
   align-items: center;
+}
+
+@media screen and (max-width: 1000px) {
+  #controlBase {
+    flex-direction: column-reverse;
+  }
+  #controlBase .serverNavbar {
+    height: 27px;
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
+  #controlBase .serverNavbar .itemServer {
+    width: 100%;
+  }
 }
