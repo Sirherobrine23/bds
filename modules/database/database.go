@@ -3,6 +3,7 @@ package db
 import (
 	"sirherobrine23.com.br/go-bds/bds/modules/config"
 	"xorm.io/xorm"
+	"xorm.io/xorm/log"
 	"xorm.io/xorm/names"
 
 	_ "github.com/denisenkom/go-mssqldb"
@@ -28,16 +29,12 @@ func ConnectDB() error {
 		return err
 	}
 	DatabaseConnection.SetMapper(names.SameMapper{})
+	DatabaseConnection.ShowSQL(true)
+	DatabaseConnection.Logger().SetLevel(log.LOG_DEBUG)
 
-	// Init tables
-	tablesInit := [](func() error){
-		createUserDB,
-		createTokensDB,
-	}
-	for _, callDB := range tablesInit {
-		if err := callDB(); err != nil {
-			return err
-		}
+	// Create tables
+	if err := DatabaseConnection.CreateTables(&User{}, &Token{}, &Cookie{}); err != nil {
+		return err
 	}
 	return nil
 }

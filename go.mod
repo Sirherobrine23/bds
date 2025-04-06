@@ -1,6 +1,6 @@
 module sirherobrine23.com.br/go-bds/bds
 
-go 1.23.0
+go 1.24
 
 require (
 	github.com/denisenkom/go-mssqldb v0.12.3
@@ -8,10 +8,11 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/urfave/cli/v2 v2.27.4
-	golang.org/x/crypto v0.32.0
+	golang.org/x/crypto v0.36.0
 	gopkg.in/ini.v1 v1.67.0
 	modernc.org/sqlite v1.34.5
-	sirherobrine23.com.br/go-bds/go-bds v0.0.0-20250126024716-bda5d38bad5b
+	sirherobrine23.com.br/go-bds/go-bds v0.1.1-alpha
+	sirherobrine23.com.br/go-bds/request v1.2.3
 	xorm.io/xorm v1.3.9
 )
 
@@ -19,7 +20,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/PuerkitoBio/goquery v1.10.1 // indirect
+	github.com/PuerkitoBio/goquery v1.10.2 // indirect
 	github.com/aegistudio/go-winfsp v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -38,13 +39,9 @@ require (
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gookit/color v1.5.4 // indirect
-	github.com/gookit/goutil v0.6.18 // indirect
-	github.com/gookit/properties v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -56,7 +53,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
-	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0 // indirect
@@ -66,11 +62,9 @@ require (
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
-	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 	modernc.org/libc v1.55.3 // indirect

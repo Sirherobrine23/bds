@@ -1,163 +1,59 @@
 package db
 
 import (
-	"crypto/rand"
 	"errors"
-	"slices"
-
-	"crypto/aes"
-	"crypto/cipher"
-
-	"golang.org/x/crypto/scrypt"
+	"fmt"
 
 	"sirherobrine23.com.br/go-bds/bds/modules/config"
+	"sirherobrine23.com.br/go-bds/bds/modules/pass"
 )
 
 var (
-	ErrTokenInvalid = errors.New("token invalid")
-	ErrSaltPassword = errors.New("token not salted")
-)
-
-const (
-	defaultSaltSize  = 24
-	defaultTokenSize = 32
+	ErrInvalidPassword error = errors.New("invalid password")
 )
 
 type Token struct {
-	TokenID    int64  `json:"id" xorm:"'id' pk"`                    // Token ID
-	User       User   `json:"user" xorm:"'user' extends"`           // User
-	IsPassword bool   `json:"isPassword" xorm:"'ispass' default 0"` // Is Password not token
-	Secret     []byte `json:"-" xorm:"'secret' notnull"`            // Password or token secret key
-	IV         []byte `json:"-" xorm:"'iv' notnull"`                // Initialization Vector
-	Cypther    []byte `json:"-" xorm:"'cypther' notnull"`           // Cypther
+	TokenID  int64  `json:"id" xorm:"'id' pk autoincr"`    // Token ID
+	User     *User  `json:"user" xorm:"'user_id' notnull"` // User
+	Token    string `json:"-" xorm:"token"`                // Token secret
+	Password string `json:"-" xorm:"password"`             // Password
 }
 
-func createTokensDB() error {
-	ok, err := DatabaseConnection.IsTableExist(&Token{})
-	if err == nil && ok {
-		err = DatabaseConnection.Sync(&Token{})
-	} else if err == nil && !ok {
-		err = DatabaseConnection.CreateTables(&Token{})
+func (token Token) Compare(password string) error {
+	if token.Password == "" {
+		return ErrInvalidPassword
 	}
-	return err
-}
-
-// Save token in database
-func (token Token) Save(user User) error {
-	if token.IsPassword {
-		table := DatabaseConnection.Table(&Token{})
-		ok, err := table.Exist(&Token{User: user, IsPassword: true})
-		if err == nil && ok {
-			_, err = table.Where("user = ? AND ispass = ?", user, true).Update(&token) // Update password
-		}
+	section, err := config.ConfigProvider.GetSection("ENCRYPTS")
+	if err != nil {
 		return err
 	}
-	token.User = user
-	_, err := DatabaseConnection.Insert(token)
-	return err
-}
 
-func (token *Token) Salt() error {
-	// Check if token is already salted
-	if len(token.Secret) > 0 && len(token.IV) > 0 {
+	decodedPass, err := pass.Decrypt(section.Key("AUTH_TOKEN").String(), token.Password)
+	if err != nil {
+		return fmt.Errorf("cannot check password: %s", err)
+	} else if decodedPass == password {
 		return nil
 	}
+	return ErrInvalidPassword
+}
 
+func CreatePassword(password string, user *User) (*Token, error) {
 	section, err := config.ConfigProvider.GetSection("ENCRYPTS")
 	if err != nil {
-		return err
-	}
-	tokenToAuth := []byte(section.Key("AUTH_TOKEN").String())
-
-	// Make secret and iv
-	token.Secret, token.IV = make([]byte, defaultSaltSize), make([]byte, aes.BlockSize)
-	if _, err = rand.Read(token.Secret); err != nil {
-		return err
-	} else if _, err = rand.Read(token.IV); err != nil {
-		return err
-	}
-
-	// Encrypt token
-	key, err := scrypt.Key(tokenToAuth, token.Secret, 24, 8, 1, 32)
-	if err != nil {
-		return err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	// Encrypt secret
-	encodedToken := make([]byte, len(token.Secret))
-	stream := cipher.NewCBCEncrypter(block, token.IV)
-	stream.CryptBlocks(encodedToken, token.Secret)
-	token.Secret = encodedToken
-
-	return nil
-}
-
-func (token Token) Compare(secret string) error {
-	// Check if token is already salted
-	if !(len(token.Secret) > 0 && len(token.IV) > 0) {
-		return ErrSaltPassword
-	}
-
-	section, err := config.ConfigProvider.GetSection("ENCRYPTS")
-	if err != nil {
-		return err
-	}
-	tokenToAuth := []byte(section.Key("AUTH_TOKEN").String())
-
-	// Decrypt token
-	key, err := scrypt.Key(tokenToAuth, token.Secret, 24, 8, 1, 32)
-	if err != nil {
-		return err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	// Decrypt secret
-	decodedToken := make([]byte, len(token.Secret))
-	stream := cipher.NewCBCDecrypter(block, token.IV)
-	stream.CryptBlocks(decodedToken, token.Secret)
-
-	// Compare secrets
-	if string(decodedToken) != secret {
-		return ErrTokenInvalid
-	}
-
-	return nil
-}
-
-// Create token from password string
-func CreateTokenPassword(pass string) (*Token, error) {
-	token := &Token{IsPassword: true, Secret: []byte(pass)}
-	err := token.Salt()
-	if err == nil {
-		if err = token.Compare(pass); err != nil {
-			token = nil
-		}
-	}
-	return token, err
-}
-
-func CreateToken() (*Token, error) {
-	token := &Token{
-		Secret:     make([]byte, defaultTokenSize),
-		IsPassword: false,
-	}
-	if _, err := rand.Read(token.Secret); err != nil {
 		return nil, err
+	} else if user == nil {
+		return nil, ErrUserExist
 	}
 
-	err := token.Salt()
-	return token, err
-}
+	// Create struct
+	newToken := &Token{User: user, TokenID: 0, Token: ""}
 
-func (token Token) String() string {
-	return string(slices.Concat(token.IV, token.Secret, token.Cypther))
+	// Encrypt password
+	if newToken.Password, err = pass.Encrypt(section.Key("AUTH_TOKEN").String(), password); err != nil {
+		return nil, fmt.Errorf("cannot encrypt password: %s", err)
+	} else if _, err = DatabaseConnection.InsertOne(newToken); err != nil {
+		return nil, fmt.Errorf("cannot insert to database: %s", err)
+	}
+	
+	return newToken, nil
 }

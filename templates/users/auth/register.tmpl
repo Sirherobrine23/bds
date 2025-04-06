@@ -1,0 +1,31 @@
+{{template "base/head.tmpl" . }}
+<div role="main">
+  <div>
+    <div id="loginarea">
+      {{if .Error}}
+      <div class="error_area">{{.Error}}</div>
+      {{end}}
+      <div>
+        <h4>Register new User</h4>
+        <form action="/register" method="post">
+          <div>
+            <input type="text" name="name" value="{{.Name}}" placeholder="You name complete">
+          </div>
+          <div>
+            <input type="text" name="username" value="{{.Username}}" maxlength="255" max="255" placeholder="Username">
+          </div>
+          <div>
+            <input type="email" name="email" value="{{.Email}}" placeholder="email">
+          </div>
+          <div>
+            <input type="password" name="password" minlength="8" min="8" placeholder="A strong password">
+          </div>
+          <div>
+            <input type="submit" value="Register">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{template "base/footer.tmpl" . }}

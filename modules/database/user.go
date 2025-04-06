@@ -9,22 +9,12 @@ type Users []*User
 
 // Base struct to User
 type User struct {
-	ID       int64  `json:"id" xorm:"pk"`                               // User id
-	Username string `json:"username" xorm:"varcha(125) notnull unique"` // Username
-	Email    string `json:"email" xorm:"text notnull unique"`           // User email
-	Name     string `json:"name" xorm:"text notnull"`                   // User name
-	Active   bool   `json:"actived" xorm:"bool default 0"`              // If account is actived
-	Banned   bool   `json:"banned" xorm:"bool default 0"`               // If account not regular to access
-}
-
-func createUserDB() error {
-	ok, err := DatabaseConnection.IsTableExist(&User{})
-	if err == nil && ok {
-		err = DatabaseConnection.Sync(&User{})
-	} else if err == nil && !ok {
-		err = DatabaseConnection.CreateTables(&User{})
-	}
-	return err
+	ID       int64  `json:"id" xorm:"pk autoincr"`               // User id
+	Username string `json:"username" xorm:"text notnull unique"` // Username
+	Email    string `json:"email" xorm:"text notnull unique"`    // User email
+	Name     string `json:"name" xorm:"text notnull"`            // User name
+	Active   bool   `json:"actived" xorm:"bool default 0"`       // If account is actived
+	Banned   bool   `json:"banned" xorm:"bool default 0"`        // If account not regular to access
 }
 
 // Load all users to Struct
@@ -49,8 +39,13 @@ func (user *User) CreateUser() error {
 	}
 
 	// Clean ID
-	user.ID = 0
+	id, err := DatabaseConnection.Count(&User{})
+	if err != nil {
+		return err
+	}
+	user.ID = id
+
 	// Insert to table
-	_, err := table.Insert(user)
+	_, err = table.InsertOne(user)
 	return err
 }
