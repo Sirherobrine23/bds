@@ -1,9 +1,12 @@
 # Node.js
-node_modules/
+/node_modules/
 /*-lock*
-*.tsbuildinfo
+/*.tsbuildinfo
+
+# Typescript
 web_src/**/*.d.ts
 web_src/**/*.js
+!web_src/js/types.d.ts
 
 # Go and project files
 *.ini

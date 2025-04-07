@@ -1,6 +1,51 @@
-@import "/css/navbar.css";
-@import "/css/login.css";
-@import "/css/server.css";
+@font-face {
+  font-family: Roboto;
+  src: url("/fonts/Roboto-Regular.ttf");  
+}
+@font-face {
+  font-family: Roboto-Italic;
+  src: url("/fonts/Roboto-Italic.ttf");
+}
+@font-face {
+  font-family: Roboto-Bold;
+  src: url("/fonts/Roboto-Bold.ttf");
+  font-weight: bold;
+}
+
+body {
+  background-color: var(--color-body);
+  font-family: Roboto;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-size: 14px;
+  font-family: Roboto;
+}
+
+#error500Page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#home_welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#home_welcome .titleUpper {
+  font-size: 58px;
+}
+
+@media only screen and (max-width: 768px) {
+  #home_welcome .titleUpper {
+    font-size: 38px;
+  }
+}
 
 :root {
   --is-dark-theme: true;
@@ -201,7 +246,12 @@
   --color-input-border: var(--color-secondary);
   --color-input-border-hover: var(--color-secondary-dark-1);
   --color-light: #00001728;
-  --color-light-mimic-enabled: rgba(0, 0, 0, calc(40 / 255 * 222 / 255 / var(--opacity-disabled)));
+  --color-light-mimic-enabled: rgba(
+    0,
+    0,
+    0,
+    calc(40 / 255 * 222 / 255 / var(--opacity-disabled))
+  );
   --color-light-border: #e8f3ff28;
   --color-hover: #e8f3ff19;
   --color-hover-opaque: #21252a; /* TODO: color-mix(in srgb, var(--color-body), var(--color-hover)); */
@@ -220,7 +270,9 @@
   --color-placeholder-text: var(--color-text-light-3);
   --color-editor-line-highlight: var(--color-primary-light-5);
   --color-project-column-bg: var(--color-secondary-light-2);
-  --color-caret: var(--color-text); /* should ideally be --color-text-dark, see #15651 */
+  --color-caret: var(
+    --color-text
+  ); /* should ideally be --color-text-dark, see #15651 */
   --color-reaction-bg: #e8f3ff12;
   --color-reaction-hover-bg: var(--color-primary-light-4);
   --color-reaction-active-bg: var(--color-primary-light-5);
@@ -241,36 +293,4 @@
   --color-overlay-backdrop: #080808c0;
   accent-color: var(--color-accent);
   color-scheme: dark;
-}
-
-body {
-  background-color: var(--color-body);
-}
-
-html, body {
-  margin: 0;
-  height: 100%;
-  font-size: 14px;
-}
-
-#error500Page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#home_welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#home_welcome .titleUpper {
-  font-size: 58px;
-}
-
-@media only screen and (max-width: 768px) {
-  #home_welcome .titleUpper {
-    font-size: 38px;
-  }
 }

@@ -1,21 +1,25 @@
 <nav id="navbar">
   <div class="navbar-left">
-    <a href="/" >
-      <img src="/img/logo.svg" width="30" height="30" aria-hidden="true" alt="logo">
-    </a>
+    <a class="item" id="navbar-logo" href="/">
+			<img width="30" height="30" src="/img/logo_home.svg" aria-hidden="true">
+		</a>
+		{{if .Signed}}
+		<div class="item">
+      <a class="item" href="/servers">Servers</a>
+    </div>
+		{{end}}
   </div>
   <div class="navbar-right">
     {{if .Signed}}
-    <div>
-      <div>
-        <img src="/user/img" width="30" height="30" aria-hidden="true" alt="user">
-      </div>
+    <div class="item navbarUser">
+      <a href="/user" class="navUser">
+        <span>{{.User.Username}}</span>
+        <img src="/user/img" width="30" height="30" aria-hidden="true">
+      </a>
     </div>
     {{else}}
     <div>
       <a href="/login">Login</a>
-    </div>
-    <div>
       <a href="/register">Register</a>
     </div>
     {{end}}

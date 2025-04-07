@@ -1,0 +1,29 @@
+{{template "base/head.tmpl" . }}
+<link rel="stylesheet" href="/css/server/servers.css">
+<div role="main">
+  <div class="serverRoot">
+    {{ $serverLen := len .Servers }}{{ if eq $serverLen 0 }}
+    <div>
+      <a href="/servers/new">
+        <span>Create fist server</span>
+      </a>
+    </div>
+    {{else}}
+    <div class="serverNew">
+      <a href="/servers/new">
+        <span>Create new Server</span>
+      </a>
+    </div>
+    <div class="serverList">
+      {{ range $_, $Server := .Servers }}
+      <a href="/server/{{$Server.ServerID}}" class="serverInfo">
+        <div>
+          <h3>{{$Server.Name}}</h3>
+        </div>
+      </a>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+</div>
+{{template "base/footer.tmpl" . }}

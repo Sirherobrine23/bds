@@ -33,7 +33,7 @@ func ConnectDB() error {
 	DatabaseConnection.Logger().SetLevel(log.LOG_DEBUG)
 
 	// Create tables
-	if err := DatabaseConnection.CreateTables(&User{}, &Token{}, &Cookie{}); err != nil {
+	if err := DatabaseConnection.CreateTables(&User{}, &Token{}, &Cookie{}, &MinecraftServers{}); err != nil {
 		return err
 	}
 	return nil

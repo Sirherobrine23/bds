@@ -1,12 +1,11 @@
-//go:generate npm run webpacked
+//go:generate npm run tss
+
+// Package with static files
 package web
 
-
-import (
-	"embed"
-)
+import "embed"
 
 var (
-	//go:embed css/** js/** img/**
+	//go:embed css/* img/* fonts/* js/*
 	StatisFiles embed.FS
 )

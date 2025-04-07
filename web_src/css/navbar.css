@@ -5,7 +5,7 @@
   background: var(--color-nav-bg);
   border-bottom: 1px solid var(--color-secondary);
   padding: 0 6px;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 #navbar .navbar-left,
@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  min-height: 49px; /* +1px border-bottom */
+  min-height: 64px; /* +1px border-bottom */
 }
 
 .navbar-left > .item,
@@ -29,6 +29,11 @@
   min-width: 36px;
   padding: 3px 13px;
   border-radius: 4px;
+}
+
+.item a:visited, .item a:link {
+  color: var(--color-nav-text);
+  text-decoration: none;
 }
 
 #navbar .item.active {
@@ -144,10 +149,31 @@
 }
 
 .secondary-nav {
-  background: var(--color-secondary-nav-bg) !important; /* important because of .ui.secondary.menu */
+  background: var(
+    --color-secondary-nav-bg
+  ) !important; /* important because of .ui.secondary.menu */
 }
 
 .issue-navbar {
   display: flex;
   justify-content: space-between;
+}
+
+.navbarUser {
+  display: flex;
+  /* gap: 8px; */
+  align-items: center;
+  flex-direction: column;
+}
+
+/* Round user image */
+.navUser img {
+  border-radius: 20px;
+}
+
+.navbarUser .navUser {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  /* flex-direction: row; */
 }

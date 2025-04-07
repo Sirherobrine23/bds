@@ -60,3 +60,12 @@ func StatusTemplate(w io.Writer, IsSigned bool, err error) {
 		ErrorMSg:      err.Error(),
 	}))
 }
+
+func StatusTemplate404(w io.Writer, IsSigned bool, message string) {
+	templateStatus := WebTemplate.Lookup("status/not_found.tmpl")
+	fmt.Println(templateStatus.Execute(w, map[string]any{
+		"Title":   "Page not found",
+		"Signed":  IsSigned,
+		"Message": message,
+	}))
+}

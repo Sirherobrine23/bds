@@ -1,10 +1,20 @@
 {{template "base/head.tmpl" . }}
-<div id="home_welcome">
-  <div>
-    <span class="titleUpper">Minecraft Server dashboard</s>
+  {{if .Signed}}
+  <div role="main">
+    <h1>Welcome back</h1>
+    <div>
+      Go to server to maneger
+      <a href="/servers">Server list</a>
+    </div>
   </div>
-  <div>
-    <div>Maneger o minecraft server directly from web and more functions</div>
+{{else}}
+  <div role="main" class="public_home">
+    <div>
+      <span class="titleUpper">Minecraft Server dashboard</s>
+    </div>
+    <div>
+      <div>Maneger o minecraft server directly from web and more functions</div>
+    </div>
   </div>
-</div>
+{{end}}
 {{template "base/footer.tmpl" . }}

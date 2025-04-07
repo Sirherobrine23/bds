@@ -1,0 +1,12 @@
+.create_server {
+  height: 100%;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  align-content: space-around;
+  gap: 6px;
+}
+
+.create_server .selectServer .selectServerServers {
+  display: flex;
+}

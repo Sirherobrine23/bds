@@ -1,11 +1,12 @@
 {{template "base/head.tmpl" . }}
-<div role="main" id="controlBase">
+<div role="main" style="width: 100%;height: 89%;display: flex;">
   {{template "server/server/navbar.tmpl" . }}
-  <div class="serverContent">
-    {{if .IsControl}}
-      {{template "server/server/control.tmpl" .}}
-    {{else if .IsSeetings}}
-      {{template "server/server/settings.tmpl" .}}
+  <div class="serverContent" style="height: 100%;width: 100%; margin-left: 10px;">
+    {{if .IsSeetings}}{{template "server/server/settings.tmpl" .}}
+    {{else if .IsPlayer}}{{template "server/server/player.tmpl" .}}
+    {{else if .IsSoftware}}{{template "server/server/software.tmpl" .}}
+    {{else if .IsFiles}}{{template "server/server/files.tmpl" .}}
+    {{else}}{{template "server/server/home.tmpl" .}}
     {{end}}
   </div>
 </div>
