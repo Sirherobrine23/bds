@@ -8,6 +8,7 @@ import (
 
 	"sirherobrine23.com.br/go-bds/bds/modules/config"
 	db "sirherobrine23.com.br/go-bds/bds/modules/database"
+	webTemplates "sirherobrine23.com.br/go-bds/bds/templates"
 	web "sirherobrine23.com.br/go-bds/bds/web_src"
 )
 
@@ -100,6 +101,13 @@ func GetCookieCtx(r *http.Request) *db.Cookie {
 
 func ContextWeb(fn http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				webTemplates.StatusTemplate500(w, r, fmt.Errorf("%s", err))
+				return
+			}
+		}()
+
 		if cookie, _ := r.Cookie(CookieName); cookie != nil {
 			var cookies []*db.Cookie
 			if err := db.DatabaseConnection.Join("FULL", "User", "User.ID = Cookie.user").Where("cookie.cookie == ?", cookie.Value).Find(&cookies); err == nil && len(cookies) > 0 {

@@ -6,8 +6,11 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"net/http"
 	"path/filepath"
 	"strings"
+
+	db "sirherobrine23.com.br/go-bds/bds/modules/database"
 )
 
 var (
@@ -67,5 +70,28 @@ func StatusTemplate404(w io.Writer, IsSigned bool, message string) {
 		"Title":   "Page not found",
 		"Signed":  IsSigned,
 		"Message": message,
+	}))
+}
+
+func StatusTemplate500(w http.ResponseWriter, r *http.Request, err error) {
+	GetUserCtx := func(r *http.Request) *db.User {
+		user := r.Context().Value("bdsuser")
+		switch user := user.(type) {
+		case db.User:
+			return &user
+		case *db.User:
+			return user
+		default:
+			return nil
+		}
+	}
+
+	w.WriteHeader(500)
+	templateStatus := WebTemplate.Lookup("status/500.tmpl")
+	fmt.Println(templateStatus.Execute(w, map[string]any{
+		"Title":    "500 Error",
+		"Signed":   GetUserCtx(r) != nil,
+		"User":     GetUserCtx(r),
+		"ErrorMSg": err.Error(),
 	}))
 }

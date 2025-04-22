@@ -178,7 +178,6 @@ func init() {
 			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 			return
 		}
-
 		var serversList []*db.MinecraftServers
 		if err := db.DatabaseConnection.Where("MinecraftServers.user == ?", userInfo.ID).Find(&serversList); err != nil {
 			w.WriteHeader(500)

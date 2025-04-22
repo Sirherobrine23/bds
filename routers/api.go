@@ -10,6 +10,7 @@ import (
 	"sirherobrine23.com.br/go-bds/bds/modules/versions"
 	"sirherobrine23.com.br/go-bds/bds/routers/utils"
 	"sirherobrine23.com.br/go-bds/go-bds/bedrock"
+	"sirherobrine23.com.br/go-bds/go-bds/bedrock/pmmp"
 	"sirherobrine23.com.br/go-bds/go-bds/java"
 )
 
@@ -20,49 +21,54 @@ var (
 
 type ServerVersions struct {
 	Times struct {
-		Bedrock  time.Time `json:"bedrock"`
-		Java     time.Time `json:"java"`
-		Spigot   time.Time `json:"spigot"`
-		Paper    time.Time `json:"paper"`
-		Purpur   time.Time `json:"purpur"`
-		Folia    time.Time `json:"folia"`
-		Velocity time.Time `json:"velocity"`
+		Bedrock    time.Time `json:"bedrock"`
+		Pocketmine time.Time `json:"pocketmine"`
+		Java       time.Time `json:"java"`
+		Spigot     time.Time `json:"spigot"`
+		Paper      time.Time `json:"paper"`
+		Purpur     time.Time `json:"purpur"`
+		Folia      time.Time `json:"folia"`
+		Velocity   time.Time `json:"velocity"`
 	} `json:"cache_time"`
-	Bedrock  bedrock.Versions `json:"bedrock"`
-	Java     java.Versions    `json:"java"`
-	Spigot   java.Versions    `json:"spigot"`
-	Paper    java.Versions    `json:"paper"`
-	Purpur   java.Versions    `json:"purpur"`
-	Folia    java.Versions    `json:"folia"`
-	Velocity java.Versions    `json:"velocity"`
+	Bedrock    bedrock.Versions `json:"bedrock"`
+	Pocketmine pmmp.Versions    `json:"pocketmine"`
+	Java       java.Versions    `json:"java"`
+	Spigot     java.Versions    `json:"spigot"`
+	Paper      java.Versions    `json:"paper"`
+	Purpur     java.Versions    `json:"purpur"`
+	Folia      java.Versions    `json:"folia"`
+	Velocity   java.Versions    `json:"velocity"`
 }
 
 func init() {
 	APIv1.HandleFunc("GET /servers", func(w http.ResponseWriter, r *http.Request) {
 		utils.JsonResponse(w, 200, ServerVersions{
-			Bedrock:  versions.BedrockVersions,
-			Java:     versions.JavaVersions,
-			Spigot:   versions.SpigotVersions,
-			Paper:    versions.PaperVersions,
-			Purpur:   versions.PurpurVersions,
-			Folia:    versions.FoliaVersions,
-			Velocity: versions.VelocityVersions,
+			Bedrock:    versions.BedrockVersions,
+			Pocketmine: versions.PocketmineVersions,
+			Java:       versions.JavaVersions,
+			Spigot:     versions.SpigotVersions,
+			Paper:      versions.PaperVersions,
+			Purpur:     versions.PurpurVersions,
+			Folia:      versions.FoliaVersions,
+			Velocity:   versions.VelocityVersions,
 			Times: struct {
-				Bedrock  time.Time "json:\"bedrock\""
-				Java     time.Time "json:\"java\""
-				Spigot   time.Time "json:\"spigot\""
-				Paper    time.Time "json:\"paper\""
-				Purpur   time.Time "json:\"purpur\""
-				Folia    time.Time "json:\"folia\""
-				Velocity time.Time "json:\"velocity\""
+				Bedrock    time.Time "json:\"bedrock\""
+				Pocketmine time.Time "json:\"pocketmine\""
+				Java       time.Time "json:\"java\""
+				Spigot     time.Time "json:\"spigot\""
+				Paper      time.Time "json:\"paper\""
+				Purpur     time.Time "json:\"purpur\""
+				Folia      time.Time "json:\"folia\""
+				Velocity   time.Time "json:\"velocity\""
 			}{
-				Bedrock:  versions.BedrockTime,
-				Java:     versions.JavaTime,
-				Spigot:   versions.SpigotTime,
-				Paper:    versions.PaperTime,
-				Purpur:   versions.PurpurTime,
-				Folia:    versions.FoliaTime,
-				Velocity: versions.VelocityTime,
+				Bedrock:    versions.BedrockTime,
+				Pocketmine: versions.PocketmineTime,
+				Java:       versions.JavaTime,
+				Spigot:     versions.SpigotTime,
+				Paper:      versions.PaperTime,
+				Purpur:     versions.PurpurTime,
+				Folia:      versions.FoliaTime,
+				Velocity:   versions.VelocityTime,
 			},
 		})
 	})
@@ -70,7 +76,7 @@ func init() {
 	APIv1.HandleFunc("GET /version", func(w http.ResponseWriter, r *http.Request) {
 		utils.JsonResponse(w, 200, map[string]any{
 			"version": modules.AppVersion,
-			"started": modules.StartTime.Format(time.RFC1123Z),
+			"started": modules.StartTime.Format(time.RFC3339),
 			"uptime":  time.Now().UTC().Sub(modules.StartTime).String(),
 		})
 	})
