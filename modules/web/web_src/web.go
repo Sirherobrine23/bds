@@ -5,7 +5,5 @@ package web
 
 import "embed"
 
-var (
-	//go:embed css/* img/* fonts/* js/*
-	StatisFiles embed.FS
-)
+//go:embed css/* img/* fonts/* js/*
+var StatisFiles embed.FS

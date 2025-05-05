@@ -1,8 +1,6 @@
-package pass
+package encrypt
 
-import (
-	"testing"
-)
+import "testing"
 
 var (
 	DefaultKey       = "golang_test"

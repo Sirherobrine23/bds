@@ -3,14 +3,14 @@
     <a class="item" id="navbar-logo" href="/">
 			<img width="30" height="30" src="/img/logo_home.svg" aria-hidden="true">
 		</a>
-		{{if .Signed}}
+		{{if .User}}
 		<div class="item">
       <a class="item" href="/servers">Servers</a>
     </div>
 		{{end}}
   </div>
   <div class="navbar-right">
-    {{if .Signed}}
+    {{if .User}}
     <div class="item navbarUser">
       <a href="/user" class="navUser">
         <span>{{.User.Username}}</span>

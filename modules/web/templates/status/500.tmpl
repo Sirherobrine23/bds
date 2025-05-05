@@ -3,8 +3,8 @@
   <div id="error500Page">
     <div>
       <h1>500 Internal server error</h1>
-      {{if .ErrorMSg}}
-      <pre>{{.ErrorMSg}}</pre>
+      {{if .ShowTrace}}
+      <pre>{{.Trace}}</pre>
       {{end}}
     </div>
   </div>

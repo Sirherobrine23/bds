@@ -1,9 +1,9 @@
 {
   "include": [
-    "web_src/js/**/*",
+    "modules/web/web_src/js/**/*",
   ],
   "exclude": [
-    "web_src/js/**/*.js",
+    "modules/web/web_src/js/**/*.js",
   ],
   "compilerOptions": {
     "esModuleInterop": true,

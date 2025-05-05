@@ -8,7 +8,6 @@ import (
 
 	"sirherobrine23.com.br/go-bds/bds/cmd"
 	"sirherobrine23.com.br/go-bds/bds/modules"
-	"sirherobrine23.com.br/go-bds/bds/modules/config"
 )
 
 func main() {
@@ -29,12 +28,6 @@ func main() {
 				"c",
 			},
 		},
-	}
-
-	// Init process
-	app.Before = func(ctx *cli.Context) error {
-		err := config.LoadConfig(ctx.String("config"))
-		return err
 	}
 
 	app.Commands = cmd.Subcomands
