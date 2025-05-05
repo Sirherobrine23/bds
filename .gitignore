@@ -10,6 +10,8 @@ web_src/**/*.js
 
 # Go and project files
 *.ini
+*.yaml
+*.yml
 *.db
 /bds
 /__debug_bin*

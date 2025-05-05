@@ -19,9 +19,9 @@ func main() {
 	app.Version = modules.AppVersion
 
 	app.Flags = []cli.Flag{
-		&cli.StringFlag{
+		&cli.PathFlag{
 			Name:  "config",
-			Value: "config.ini",
+			Value: "config.yml",
 			Usage: "config file path",
 			Aliases: []string{
 				"settigs",
