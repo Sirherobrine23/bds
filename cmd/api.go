@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"net/http"
-
 	"sirherobrine23.com.br/go-bds/bds/modules/api"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
+	httpserver "sirherobrine23.com.br/go-bds/bds/modules/http_server"
 
 	"github.com/chaindead/zerocfg"
 	"github.com/chaindead/zerocfg/env"
@@ -40,11 +39,11 @@ var API = &cli.Command{
 		}
 
 		// Start http server
-		httpRouter, err := api.MountRouter(&api.RouteConfig{Token: databaseConnection.Token, User: databaseConnection.User})
+		httpRouter, err := api.MountRouter(&api.RouteConfig{DatabaseSchemas: databaseConnection})
 		if err != nil {
 			return err
 		}
 
-		return http.ListenAndServe(ctx.String("listen"), httpRouter)
+		return httpserver.ListenAndServe(ctx.String("listen"), httpRouter)
 	},
 }

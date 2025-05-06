@@ -1,61 +1,50 @@
-package datas
+package user
 
 import (
-	"context"
-	"crypto/rand"
 	"database/sql"
-	"embed"
-	"encoding/hex"
+	_ "embed"
 	"fmt"
 
+	"github.com/chaindead/zerocfg"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/encrypt"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/permission"
-	"sirherobrine23.com.br/go-bds/bds/modules/datas/token"
-	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 )
 
-//go:embed sql/sqlite/*
-var sqliteSqls embed.FS
+var (
+	//go:embed sqlite/create.sql
+	sqliteTableCreate string
+	
+	EncryptKey *string = zerocfg.Str("encrypt.password", "", "Password to encrypt many secret values")
+)
 
-func sqliteStartTables(connection *sql.DB) error {
-	createTableSql, err := sqliteSqls.ReadFile("sql/sqlite/create.sql")
+// Create table on start
+func SqliteStartTable(connection *sql.DB) error {
+	// Create begin to make rollback if error
+	tx, err := connection.Begin()
 	if err != nil {
-		return fmt.Errorf("cannot open sql to create table: %s", err)
+		return err
 	}
 
-	ctx := context.Background()
-	tx, err := connection.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("cannot get begin of table creations: %s", err)
-	}
-
-	// Create tables in database
-	if _, err := tx.Exec(string(createTableSql)); err != nil {
+	// Create table
+	if _, err := tx.Exec(sqliteTableCreate); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("cannot make tables in database: %s", err)
+		return err
 	}
 
-	// Commit data
+	// commit
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
-		return fmt.Errorf("cannot commit table creation: %s", err)
+		return err
 	}
 
 	return nil
 }
 
-func sqliteMount(connection *sql.DB) (*DatabaseSchemas, error) {
-	dbData := &DatabaseSchemas{Database: connection}
-
-	dbData.User = &sqliteUserSearch{connection}
-	dbData.Token = &sqliteToken{connection}
-
-	return dbData, nil
-}
+func SqliteSearch(conn *sql.DB) UserSearch { return &sqliteUserSearch{conn} }
 
 type sqliteUserSearch struct{ *sql.DB }
 
-func (s *sqliteUserSearch) processUserRow(row *sql.Row) (user.User, error) {
+func (s *sqliteUserSearch) processUserRow(row *sql.Row) (User, error) {
 	if row.Err() == nil {
 		user := &sqliteUser{dbConnection: s.DB}
 		if err := row.Scan(&user.userID, &user.userName, &user.userUsername, &user.userPermission); err != nil {
@@ -66,37 +55,13 @@ func (s *sqliteUserSearch) processUserRow(row *sql.Row) (user.User, error) {
 	return nil, row.Err()
 }
 
-func (s *sqliteUserSearch) ByID(id int) (user.User, error) {
-	return s.processUserRow(s.QueryRow("SELECT (id, \"name\", username, permission) FROM user WHERE id = $1", id))
+func (s *sqliteUserSearch) ByID(id int) (User, error) {
+	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE id = $1", id))
 }
 
-func (s *sqliteUserSearch) Username(username string) (user.User, error) {
-	return s.processUserRow(s.QueryRow("SELECT (id, \"name\", username, permission) FROM user WHERE username = $1", username))
+func (s *sqliteUserSearch) Username(username string) (User, error) {
+	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE username = $1", username))
 }
-
-type sqliteToken struct{ *sql.DB }
-
-func (t *sqliteToken) Check(token string) (exist bool, userID int, perm permission.Permission, err error) {
-	row := t.QueryRow("SELECT (user_id, permission) FROM token WHERE token = $1", token)
-	if err = row.Err(); err == nil {
-		err = row.Scan(&userID, &perm)
-		exist = true
-	}
-	return
-}
-
-func (t *sqliteToken) Create(userID int, perm permission.Permission) (string, error) {
-	tokenBuff := make([]byte, token.TokenSize)
-	rand.Read(tokenBuff)
-	tokenBuff[0] = 'b'
-	tokenBuff[1] = 's'
-	tokenBuff[2] = 'd'
-	tokenString := hex.EncodeToString(tokenBuff)
-	_, err := t.Exec("INSERT INTO tokens (user_id, token, permission) VALUE ($1, $2, $3)", userID, tokenString, perm)
-	return tokenString, err
-}
-
-var _ user.User = &sqliteUser{}
 
 type sqliteUser struct {
 	userID         int
@@ -111,7 +76,7 @@ func (u *sqliteUser) ID() int                           { return u.userID }
 func (u *sqliteUser) Name() string                      { return u.userName }
 func (u *sqliteUser) Username() string                  { return u.userUsername }
 func (u *sqliteUser) Permission() permission.Permission { return u.userPermission }
-func (u *sqliteUser) Password() (user.Password, error) {
+func (u *sqliteUser) Password() (Password, error) {
 	return &sqlitePassword{dbConnection: u.dbConnection, userID: u.userID}, nil
 }
 

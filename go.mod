@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/chaindead/zerocfg v0.1.4
 	github.com/denisenkom/go-mssqldb v0.12.3
+	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.28

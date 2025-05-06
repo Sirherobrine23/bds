@@ -1,4 +1,4 @@
-package webTemplates
+package templates
 
 import (
 	"embed"
@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+
+	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 )
 
 // Templates files
@@ -22,7 +24,7 @@ type RenderData struct {
 	Title         string
 	Lang          string
 	PageIsInstall bool
-	User          any
+	User          user.User
 
 	External map[string]any
 }

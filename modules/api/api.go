@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	app "sirherobrine23.com.br/go-bds/bds/modules"
 
+	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/permission"
-	"sirherobrine23.com.br/go-bds/bds/modules/datas/token"
-	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 )
 
 const (
@@ -29,8 +29,7 @@ type ErrorResponse struct {
 }
 
 type RouteConfig struct {
-	Token token.Token
-	User  user.UserSearch
+	*datas.DatabaseSchemas
 }
 
 type AppVersion struct {
@@ -41,7 +40,7 @@ type AppVersion struct {
 
 // Mount router to /api
 func MountRouter(config *RouteConfig) (http.Handler, error) {
-	router := http.NewServeMux()
+	router := chi.NewMux()
 
 	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -53,6 +52,14 @@ func MountRouter(config *RouteConfig) (http.Handler, error) {
 			Uptime:  time.Now().Sub(app.StartTime),
 			Perm:    r.Context().Value(ContextTokenPerm).(permission.Permission),
 		})
+	})
+
+	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		js := json.NewEncoder(w)
+		js.SetIndent("", "  ")
+		js.Encode(ErrorResponse{From: "api path not found"})
 	})
 
 	// Catch panic and set context with user info
