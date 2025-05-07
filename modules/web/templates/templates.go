@@ -71,6 +71,7 @@ func (t *TemplateRender) Templates() (names []string) {
 		}
 		names = append(names, tmpl.Name())
 	}
+	slices.Sort(names)
 	return
 }
 

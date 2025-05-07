@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"net/http"
-
 	"github.com/chaindead/zerocfg"
 	"github.com/chaindead/zerocfg/env"
 	"github.com/chaindead/zerocfg/yaml"
 	"github.com/urfave/cli/v2"
-	"sirherobrine23.com.br/go-bds/bds/modules/api"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	httpserver "sirherobrine23.com.br/go-bds/bds/modules/http_server"
 	"sirherobrine23.com.br/go-bds/bds/modules/web"
@@ -40,23 +37,12 @@ var Web = &cli.Command{
 			return err
 		}
 
-		// Start http server
-		httpRouterAPI, err := api.MountRouter(&api.RouteConfig{DatabaseSchemas: databaseConnection})
-		if err != nil {
-			return err
-		}
-
 		// Web interface
 		httpWeb, err := web.MountRouter(&web.WebConfig{DatabaseSchemas: databaseConnection})
 		if err != nil {
 			return err
 		}
 
-		// Merge routers
-		httpRouter := http.NewServeMux()
-		httpRouter.Handle("/api", httpRouterAPI)
-		httpRouter.Handle("/", httpWeb)
-
-		return httpserver.ListenAndServe(ctx.String("listen"), httpRouter)
+		return httpserver.ListenAndServe(ctx.String("listen"), httpWeb)
 	},
 }

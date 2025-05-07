@@ -1,4 +1,5 @@
-package clients
+// SQL clients
+package sqlclients
 
 import (
 	_ "github.com/denisenkom/go-mssqldb"

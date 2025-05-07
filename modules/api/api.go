@@ -14,6 +14,7 @@ import (
 
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/permission"
+	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 )
 
 const (
@@ -33,28 +34,68 @@ type RouteConfig struct {
 }
 
 type AppVersion struct {
-	Version string                `json:"version"`
-	Uptime  time.Duration         `json:"uptime"`
-	Perm    permission.Permission `json:"user_permission"`
+	Version string        `json:"version"`
+	Uptime  time.Duration `json:"uptime"`
+}
+
+func getUser(r *http.Request) user.User {
+	switch v := r.Context().Value(ContextUser).(type) {
+	case user.User:
+		return v
+	default:
+		return nil
+	}
+}
+
+func getTokenPerm(r *http.Request) permission.Permission {
+	switch v := r.Context().Value(ContextTokenPerm).(type) {
+	case permission.Permission:
+		return v
+	default:
+		return permission.Unknown
+	}
 }
 
 // Mount router to /api
 func MountRouter(config *RouteConfig) (http.Handler, error) {
-	router := chi.NewMux()
-
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	api := chi.NewMux()
+	api.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		js := json.NewEncoder(w)
 		js.SetIndent("", "  ")
 		js.Encode(AppVersion{
 			Version: app.AppVersion,
-			Uptime:  time.Now().Sub(app.StartTime),
-			Perm:    r.Context().Value(ContextTokenPerm).(permission.Permission),
+			Uptime:  time.Since(app.StartTime),
 		})
 	})
 
-	router.NotFound(func(w http.ResponseWriter, r *http.Request) {
+	api.Get("/servers", func(w http.ResponseWriter, r *http.Request) {
+		user := getUser(r)
+		if user == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			js := json.NewEncoder(w)
+			js.SetIndent("", "  ")
+			js.Encode(ErrorResponse{From: "authorization", Message: "require token to get servers"})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		js := json.NewEncoder(w)
+		js.SetIndent("", "  ")
+
+		servers, err := config.Servers.ByOwner(user.ID())
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			js.Encode(ErrorResponse{From: "error", Message: err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		js.Encode(servers)
+	})
+
+	api.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
 		js := json.NewEncoder(w)
@@ -152,6 +193,6 @@ func MountRouter(config *RouteConfig) (http.Handler, error) {
 		}
 
 		// Caller api router handler
-		router.ServeHTTP(w, r)
+		api.ServeHTTP(w, r)
 	}), nil
 }

@@ -2,16 +2,17 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
+	"sirherobrine23.com.br/go-bds/bds/modules/api"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/permission"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 	"sirherobrine23.com.br/go-bds/bds/modules/web/templates"
 	static "sirherobrine23.com.br/go-bds/bds/modules/web/web_src"
-
-	"fmt"
 )
 
 const (
@@ -39,8 +40,14 @@ func MountRouter(config *WebConfig) (http.Handler, error) {
 		return nil, err
 	}
 
+	api, err := api.MountRouter(&api.RouteConfig{DatabaseSchemas: config.DatabaseSchemas})
+	if err != nil {
+		return nil, err
+	}
+
 	// Start new handler
 	router := chi.NewMux()
+	router.Mount("/api", api)
 
 	// Serve static files to client
 	staticFiles := http.FileServerFS(static.StaticFiles)
@@ -141,6 +148,42 @@ func MountRouter(config *WebConfig) (http.Handler, error) {
 		}
 
 		pageConfig := &templates.RenderData{External: map[string]any{}}
+		if r.Method == http.MethodPost {
+			var name, username, email, password string
+			switch r.Header.Get("Content-Type") {
+			case "application/x-www-form-urlencoded":
+				if err := r.ParseForm(); err != nil {
+					println(err.Error())
+					pageConfig.External["Error"] = fmt.Sprintf("cannot parse Form body: %s", err)
+					webTemplates.Render("users/auth/register.tmpl", w, pageConfig)
+					return
+				}
+				name, username, email, password = r.Form.Get("name"), r.Form.Get("username"), r.Form.Get("email"), r.Form.Get("password")
+			default:
+				webTemplates.Render("users/auth/register.tmpl", w, pageConfig)
+				return
+			}
+
+			user, err := config.User.Create(name, username, email, password)
+			if err != nil {
+				println(err.Error())
+				pageConfig.External["Error"] = err.Error()
+				webTemplates.Render("users/auth/register.tmpl", w, pageConfig)
+				return
+			}
+
+			newCookie, err := config.Cookie.CreateCookie(user.ID())
+			if err != nil {
+				println(err.Error())
+				pageConfig.External["Error"] = "cannot auth user, error on make cookie"
+				webTemplates.Render("users/auth/register.tmpl", w, pageConfig)
+				return
+			}
+
+			http.SetCookie(w, &http.Cookie{Name: CookieName, Value: newCookie})
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
 		webTemplates.Render("users/auth/register.tmpl", w, pageConfig)
 	})
 

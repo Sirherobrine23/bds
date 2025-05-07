@@ -2,5 +2,13 @@
   "files.associations": {
     "*.tmpl": "html",
     "*.css": "css",
-  }
+  },
+  "sqltools.connections": [
+    {
+      "previewLimit": 5000,
+      "driver": "SQLite",
+      "name": "bds",
+      "database": "${workspaceFolder}/bds.db"
+    }
+  ]
 }

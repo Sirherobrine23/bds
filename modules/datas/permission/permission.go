@@ -7,21 +7,22 @@ import (
 )
 
 // User permission
-type Permission uint
+type Permission int
 
 const (
-	Unknown Permission = iota << 4
+	Root Permission = iota << 4 // Have all permission on bds-dashboard
 
 	CreateServer // Create server
 	DeleteServer // Delete server
 	ListServer   // List other server in bds-dashboard
 	EditServer   // Edit server after creation
 
-	// Have all permission on bds-dashboard
-	Root = CreateServer |
-		DeleteServer |
-		ListServer |
-		EditServer
+	ServerOwner  // Server owner
+	ServerView   // Server view
+	ServerEdit   // Server edit
+	ServerUpdate // Server update
+
+	Unknown = -1 // No valid permission
 )
 
 var permisionString = map[Permission]string{
@@ -29,6 +30,11 @@ var permisionString = map[Permission]string{
 	DeleteServer: "delete_server",
 	ListServer:   "list_server",
 	EditServer:   "edit_server",
+
+	ServerOwner:  "server_owner",
+	ServerView:   "server_view",
+	ServerEdit:   "server_edit",
+	ServerUpdate: "server_update",
 }
 
 func (p Permission) IsRoot() bool               { return p == Root }

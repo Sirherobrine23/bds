@@ -1,14 +1,13 @@
 PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS "user" (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name text NOT NULL,
-  username varchar(25) UNIQUE NOT NULL,
-  permission INTEGER DEFAULT 0
+  name TEXT NOT NULL,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  permission INTEGER DEFAULT -1
 );
-
 CREATE TABLE IF NOT EXISTS "password" (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER UNIQUE REFERENCES user (id) ON DELETE CASCADE,
-  password text
+  password TEXT NOT NULL
 );

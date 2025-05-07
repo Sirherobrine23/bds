@@ -33,28 +33,28 @@ func SqliteStartTable(connection *sql.DB) error {
 	return nil
 }
 
-func SqliteCookieConn(conn *sql.DB) Cookie { return &SqliteCookie{conn} }
+func SqliteCookie(conn *sql.DB) Cookie { return &Sqlite{conn} }
 
-type SqliteCookie struct {
+type Sqlite struct {
 	Connection *sql.DB
 }
 
-func (sqlite *SqliteCookie) Cookie(cookieValue string) (exist bool, userID int, err error) {
+func (sqlite *Sqlite) Cookie(cookieValue string) (exist bool, userID int, err error) {
 	var cookies int
-	if err = sqlite.Connection.QueryRow("SELECT count(*) FROM cookies WHERE cookie == $1", cookieValue).Scan(&cookies); err != nil {
+	if err = sqlite.Connection.QueryRow("SELECT count(*) FROM cookies WHERE cookie = $1", cookieValue).Scan(&cookies); err != nil {
 		return
 	}
 
 	if cookies > 0 {
 		exist = true
-		err = sqlite.Connection.QueryRow("SELECT user_id FROM cookies WHERE cookie == $1 LIMIT 1", cookieValue).Scan(&userID)
+		err = sqlite.Connection.QueryRow("SELECT user_id FROM cookies WHERE cookie = $1 LIMIT 1", cookieValue).Scan(&userID)
 	}
 
 	return
 }
 
-func (sqlite *SqliteCookie) CreateCookie(userID int) (cookieValue string, err error) {
+func (sqlite *Sqlite) CreateCookie(userID int) (cookieValue string, err error) {
 	cookieValue = newCookieValue()
-	_, err = sqlite.Connection.Exec("INSERT INTO user_id, cookie FROM cookies VALUES ($1, $2)", userID, cookieValue)
+	_, err = sqlite.Connection.Exec("INSERT INTO cookies(user_id, cookie) VALUES ($1, $2)", userID, cookieValue)
 	return
 }

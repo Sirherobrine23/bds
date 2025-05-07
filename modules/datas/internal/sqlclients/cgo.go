@@ -1,4 +1,4 @@
 //go:build cgo
-package clients
+package sqlclients
 
 import _ "github.com/mattn/go-sqlite3"

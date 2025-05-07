@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"strings"
 
 	"github.com/chaindead/zerocfg"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/encrypt"
@@ -13,7 +14,7 @@ import (
 var (
 	//go:embed sqlite/create.sql
 	sqliteTableCreate string
-	
+
 	EncryptKey *string = zerocfg.Str("encrypt.password", "", "Password to encrypt many secret values")
 )
 
@@ -40,44 +41,21 @@ func SqliteStartTable(connection *sql.DB) error {
 	return nil
 }
 
-func SqliteSearch(conn *sql.DB) UserSearch { return &sqliteUserSearch{conn} }
+type SqliteUser struct {
+	UserID         int
+	UserName       string
+	UserUsername   string
+	UserPermission permission.Permission
 
-type sqliteUserSearch struct{ *sql.DB }
-
-func (s *sqliteUserSearch) processUserRow(row *sql.Row) (User, error) {
-	if row.Err() == nil {
-		user := &sqliteUser{dbConnection: s.DB}
-		if err := row.Scan(&user.userID, &user.userName, &user.userUsername, &user.userPermission); err != nil {
-			return nil, err
-		}
-		return user, nil
-	}
-	return nil, row.Err()
+	DB *sql.DB
 }
 
-func (s *sqliteUserSearch) ByID(id int) (User, error) {
-	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE id = $1", id))
-}
-
-func (s *sqliteUserSearch) Username(username string) (User, error) {
-	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE username = $1", username))
-}
-
-type sqliteUser struct {
-	userID         int
-	userName       string
-	userUsername   string
-	userPermission permission.Permission
-
-	dbConnection *sql.DB
-}
-
-func (u *sqliteUser) ID() int                           { return u.userID }
-func (u *sqliteUser) Name() string                      { return u.userName }
-func (u *sqliteUser) Username() string                  { return u.userUsername }
-func (u *sqliteUser) Permission() permission.Permission { return u.userPermission }
-func (u *sqliteUser) Password() (Password, error) {
-	return &sqlitePassword{dbConnection: u.dbConnection, userID: u.userID}, nil
+func (u *SqliteUser) ID() int                           { return u.UserID }
+func (u *SqliteUser) Name() string                      { return u.UserName }
+func (u *SqliteUser) Username() string                  { return u.UserUsername }
+func (u *SqliteUser) Permission() permission.Permission { return u.UserPermission }
+func (u *SqliteUser) Password() (Password, error) {
+	return &sqlitePassword{dbConnection: u.DB, userID: u.UserID}, nil
 }
 
 type sqlitePassword struct {
@@ -129,4 +107,58 @@ func (p *sqlitePassword) Check(password string) (bool, error) {
 	}
 
 	return pass != password, nil
+}
+
+func SqliteSearch(conn *sql.DB) UserSearch { return &sqliteUserSearch{conn} }
+
+type sqliteUserSearch struct{ *sql.DB }
+
+func (s *sqliteUserSearch) processUserRow(row *sql.Row) (User, error) {
+	if row.Err() == nil {
+		user := &SqliteUser{DB: s.DB}
+		if err := row.Scan(&user.UserID, &user.UserName, &user.UserUsername, &user.UserPermission); err != nil {
+			return nil, err
+		}
+		return user, nil
+	}
+	return nil, row.Err()
+}
+
+func (s *sqliteUserSearch) ByID(id int) (User, error) {
+	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE id = $1", id))
+}
+
+func (s *sqliteUserSearch) Username(username string) (User, error) {
+	return s.processUserRow(s.QueryRow("SELECT id, \"name\", username, permission FROM user WHERE username = $1", username))
+}
+
+func (s *sqliteUserSearch) Create(name, username, email, password string) (User, error) {
+	name, username, email = strings.ToLower(name), strings.ToLower(username), strings.ToLower(email)
+	if len(name) < 3 {
+		return nil, fmt.Errorf("invalid name length")
+	} else if !ValidUsername(username) {
+		return nil, fmt.Errorf("invalid username")
+	} else if !ValidEmail(email) {
+		return nil, fmt.Errorf("invalid email")
+	}
+
+	var err error
+	if password, err = encrypt.Encrypt(*EncryptKey, password); err != nil {
+		return nil, err
+	}
+
+	res, err := s.DB.Exec("INSERT INTO user(\"name\", username, email, permission) VALUES ($1, $2, $3, $4)", name, username, email, permission.Unknown)
+	if err != nil {
+		return nil, err
+	}
+
+	userID, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = s.DB.Exec("INSERT INTO password(user_id, password) VALUES ($1, $2)", userID, password); err != nil {
+		return nil, err
+	}
+	return s.ByID(int(userID))
 }
