@@ -38,9 +38,9 @@ type AppVersion struct {
 	Uptime  time.Duration `json:"uptime"`
 }
 
-func getUser(r *http.Request) user.User {
+func getUser(r *http.Request) *user.User {
 	switch v := r.Context().Value(ContextUser).(type) {
-	case user.User:
+	case *user.User:
 		return v
 	default:
 		return nil
@@ -85,7 +85,7 @@ func MountRouter(config *RouteConfig) (http.Handler, error) {
 		js := json.NewEncoder(w)
 		js.SetIndent("", "  ")
 
-		servers, err := config.Servers.ByOwner(user.ID())
+		servers, err := config.Servers.ByOwner(user.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			js.Encode(ErrorResponse{From: "error", Message: err.Error()})

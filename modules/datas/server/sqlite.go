@@ -15,116 +15,100 @@ var (
 
 	//go:embed sql/sqlite_owners.sql
 	listOwnerSqlite string
-
-	//go:embed sql/sqlite_servers.sql
-	listServersSqlite string
 )
 
-type Sqlite struct {
-	ServerID            int
-	ServerName          string
-	ServerServerType    ServerType
-	ServerServerVersion string
-
-	db *sql.DB
+func CreateSqliteTable(conn *sql.DB) error {
+	_, err := conn.Exec(createTableSqlite)
+	return err
 }
 
-// Create table on start
-func SqliteStartTable(connection *sql.DB) error {
-	// Create begin to make rollback if error
-	tx, err := connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Create table
-	if _, err := tx.Exec(createTableSqlite); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	// commit
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return nil
-}
-
-type SqliteSearch struct{ *sql.DB }
-
-func ServerSqlite(conn *sql.DB) ServerList { return &SqliteSearch{conn} }
-
-func (sql *Sqlite) ID() int                { return sql.ServerID }
-func (sql *Sqlite) Name() string           { return sql.ServerName }
-func (sql *Sqlite) ServerType() ServerType { return sql.ServerServerType }
-func (sql *Sqlite) ServerVersion() string  { return sql.ServerServerVersion }
-
-func (sql *Sqlite) Owners() ([]*ServerOwner, error) {
-	// p.user_id, p.permission, u.name, u.username, u.permission
-	rows, err := sql.db.Query(listOwnerSqlite, sql.ServerID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	users := []*ServerOwner{}
-	for rows.Next() {
-		var perm, userPerm permission.Permission
-		var userID int
-		var name, username string
-
-		if err := rows.Scan(&userID, &perm, &name, &username, &userPerm); err != nil {
-			return users, err
-		}
-
-		users = append(users, &ServerOwner{
-			Permission: perm,
-			User: &user.SqliteUser{
-				DB: sql.db,
-
-				UserID:         userID,
-				UserPermission: userPerm,
-				UserName:       name,
-				UserUsername:   username,
-			},
-		})
-	}
-
-	return users, rows.Err()
-}
-
-func (server *SqliteSearch) ByID(id int) (Server, error) {
-	row := server.QueryRow("SELECT id, name, server_type, server_version FROM servers WHERE id = $1", id)
+func (server *ServerList) sqliteByID(id int64) (*Server, error) {
+	row := server.DB.QueryRow("SELECT id, name, server_type, server_version FROM servers WHERE id = $1", id)
 	if err := row.Err(); err != nil {
 		return nil, err
 	}
-	userServer := &Sqlite{db: server.DB}
-	return userServer, row.Scan(&userServer.ServerID, &userServer.ServerName, &userServer.ServerServerType, &userServer.ServerServerVersion)
-}
 
-func (server *SqliteSearch) ByOwner(id int) ([]Server, error) {
-	rows, err := server.Query(listServersSqlite, id, permission.ServerOwner)
+	userServer := &Server{Owners: []*ServerOwner{}}
+	if err := row.Scan(&userServer.ID, &userServer.Name, &userServer.ServerType, &userServer.ServerVersion); err != nil {
+		return nil, err
+	}
+
+	// p.user_id, p.permission, u.name, u.username, u.permission
+	ownerRows, err := server.DB.Query(listOwnerSqlite, id)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer ownerRows.Close()
 
-	servers := []Server{}
-	for rows.Next() {
-		userServer := &Sqlite{db: server.DB}
-		if err := rows.Scan(
-			&userServer.ServerID,
-			&userServer.ServerName,
-			&userServer.ServerServerType,
-			&userServer.ServerServerVersion,
-		); err != nil {
-			return servers, err
+	for ownerRows.Next() {
+		var userID int64
+		var name, username string
+		var perm, userPerm permission.Permission
+
+		if err := ownerRows.Scan(&userID, &perm, &name, &username, &userPerm); err != nil {
+			return nil, err
 		}
 
-		servers = append(servers, userServer)
+		user, err := (&user.UserSearch{Driver: server.Driver, DB: server.DB}).ByID(userID)
+		if err != nil {
+			return nil, err
+		}
+		userServer.Owners = append(userServer.Owners, &ServerOwner{Permission: perm, User: user})
 	}
 
-	return servers, rows.Err()
+	if err := ownerRows.Err(); err != nil {
+		return nil, err
+	}
+
+	return userServer, nil
+}
+
+func (server *ServerList) sqliteByOwner(id int64) ([]*Server, error) {
+	var serverIDs []int64
+	serverIDsRows, err := server.DB.Query("SELECT server_id FROM servers_permission WHERE user_id = $1 AND permission = $2", id, permission.ServerOwner)
+	if err != nil {
+		return nil, err
+	}
+
+	for serverIDsRows.Next() {
+		var serverID int64
+		if err := serverIDsRows.Scan(&serverID); err != nil {
+			return nil, err
+		}
+		serverIDs = append(serverIDs, serverID)
+	}
+
+	if err := serverIDsRows.Err(); err != nil {
+		return nil, err
+	}
+
+	servers := []*Server{}
+	for _, serverID := range serverIDs {
+		server, err := server.ByID(serverID)
+		if err != nil {
+			return nil, err
+		}
+		servers = append(servers, server)
+	}
+
+	return servers, nil
+}
+
+func (server *ServerList) sqliteCreateServer(name, serverVersion string, serverType ServerType, owner *user.User) (*Server, error) {
+	res, err := server.DB.Exec("INSERT INTO servers(\"name\", server_type, server_version) VALUES ($1, $2, $3)", name, serverType, serverVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	serverID, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = server.DB.Exec("INSERT INTO servers_permission(user_id, server_id, permission) VALUES ($1, $2, $3)", owner.ID, serverID, permission.ServerOwner)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.ByID(serverID)
 }

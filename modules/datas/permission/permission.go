@@ -10,35 +10,45 @@ import (
 type Permission int
 
 const (
-	Root Permission = iota << 4 // Have all permission on bds-dashboard
+	Unknown Permission = -1 // No valid permission
+	Root    Permission = 0  // Have all permission on bds-dashboard
 
-	CreateServer // Create server
-	DeleteServer // Delete server
-	ListServer   // List other server in bds-dashboard
-	EditServer   // Edit server after creation
+	WebCreateServer Permission = 8  // Create server
+	WebDeleteServer Permission = 16 // Delete server
+	WebListServer   Permission = 24 // List other server in bds-dashboard
+	WebEditServer   Permission = 32 // Edit server after creation
 
-	ServerOwner  // Server owner
-	ServerView   // Server view
-	ServerEdit   // Server edit
-	ServerUpdate // Server update
+	ServerView   Permission = 64  // Server view
+	ServerEdit   Permission = 128 // Server edit
+	ServerUpdate Permission = 256 // Server update
 
-	Unknown = -1 // No valid permission
+	// Server owner
+	ServerOwner Permission = ServerView | ServerEdit | ServerUpdate
 )
 
 var permisionString = map[Permission]string{
-	CreateServer: "create_server",
-	DeleteServer: "delete_server",
-	ListServer:   "list_server",
-	EditServer:   "edit_server",
+	WebCreateServer: "create_server",
+	WebDeleteServer: "delete_server",
+	WebListServer:   "list_server",
+	WebEditServer:   "edit_server",
 
-	ServerOwner:  "server_owner",
 	ServerView:   "server_view",
 	ServerEdit:   "server_edit",
 	ServerUpdate: "server_update",
+	ServerOwner:  "server_owner",
 }
 
-func (p Permission) IsRoot() bool               { return p == Root }
-func (p Permission) Compare(p2 Permission) bool { return p&p2 > 0 }
+func (p Permission) IsRoot() bool { return p == Root }
+
+// Get all permissions from p2 and check if have in p
+func (p Permission) Contains(p2 Permission) bool {
+	if p.IsRoot() {
+		return true
+	}
+	pd := p.Permisions()
+	ps := p2.Permisions()
+	return slices.ContainsFunc(pd, func(pd Permission) bool { return slices.Contains(ps, pd) })
+}
 
 func (p Permission) String() string {
 	if str, ok := permisionString[p]; ok {
@@ -46,7 +56,7 @@ func (p Permission) String() string {
 	}
 
 	ps := []string{}
-	for _, pe := range p.Parsions() {
+	for _, pe := range p.Permisions() {
 		ps = append(ps, pe.String())
 	}
 	return strings.Join(ps, ",")
@@ -56,7 +66,7 @@ func (p Permission) MarshalText() ([]byte, error) { return []byte(p.String()), n
 
 func (p Permission) MarshalJSON() ([]byte, error) {
 	ps := []string{}
-	for _, pe := range p.Parsions() {
+	for _, pe := range p.Permisions() {
 		ps = append(ps, pe.String())
 	}
 	return json.Marshal(ps)
@@ -78,7 +88,7 @@ func (p *Permission) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (p Permission) Parsions() []Permission {
+func (p Permission) Permisions() []Permission {
 	ps := []Permission{}
 	for per := range permisionString {
 		if p&per > 0 {

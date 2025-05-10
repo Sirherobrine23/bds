@@ -1,6 +1,11 @@
 {{template "base/head.tmpl" . }}
 <link rel="stylesheet" href="/css/server/create.css">
 <div role="main">
+  {{if .Error}}
+    <div>
+      {{.Error}}
+    </div>
+  {{end}}
   <form method="post" target="/servers/new" id="serverCreate" class="create_server">
     <div class="selectServer">
       <h3>Select server software:</h3>

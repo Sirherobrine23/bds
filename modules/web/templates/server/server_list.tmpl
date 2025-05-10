@@ -16,9 +16,17 @@
     </div>
     <div class="serverList">
       {{ range $_, $Server := .Servers }}
-      <a href="/server/{{$Server.ServerID}}" class="serverInfo">
-        <div>
+      <a href="/servers/{{$Server.ID}}" class="show_server">
+        <div class="server_name">
           <h3>{{$Server.Name}}</h3>
+        </div>
+        <div class="server_info">
+          <div>Software: {{$Server.ServerType.String}}</div>
+          {{ range $_, $owner := $Server.Owners }}
+            {{if eq $owner.User.ID .User.ID}}
+              <div>Permission: {{$owner.Permission.String}}</div>
+            {{end}}
+          {{end}}
         </div>
       </a>
       {{end}}

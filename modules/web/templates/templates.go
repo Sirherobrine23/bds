@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"maps"
+	"net/http"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -24,7 +25,7 @@ type RenderData struct {
 	Title         string
 	Lang          string
 	PageIsInstall bool
-	User          user.User
+	User          *user.User
 
 	External map[string]any
 }
@@ -79,12 +80,48 @@ func (t *TemplateRender) Templates() (names []string) {
 func (t *TemplateRender) Render(name string, w io.Writer, data *RenderData) error {
 	if !slices.Contains(t.Templates(), name) {
 		return fmt.Errorf("template not exists: %q", name)
+	} else if data == nil {
+		data = &RenderData{External: map[string]any{}}
 	}
 	return t.Root.Lookup(name).Execute(w, data.toRender(t, nil))
 }
 
+func (t *TemplateRender) Render400(w io.Writer, data *RenderData) {
+	if data == nil {
+		data = &RenderData{
+			Title:         "Bad request",
+			Lang:          "en-us",
+			PageIsInstall: false,
+			User:          nil,
+			External: map[string]any{
+				"Error": "Bad request",
+			},
+		}
+	}
+
+	if httpWrite, ok := w.(http.ResponseWriter); ok {
+		httpWrite.WriteHeader(http.StatusBadRequest)
+	}
+
+	t.Root.Lookup("status/400.tmpl").Execute(w, data.toRender(t, nil))
+}
+
 // Render 404 page
 func (t *TemplateRender) Render404(w io.Writer, data *RenderData) {
+	if data == nil {
+		data = &RenderData{
+			Title:         "page not found",
+			Lang:          "en-us",
+			PageIsInstall: false,
+			User:          nil,
+			External:      map[string]any{},
+		}
+	}
+
+	if httpWrite, ok := w.(http.ResponseWriter); ok {
+		httpWrite.WriteHeader(http.StatusNotFound)
+	}
+
 	t.Root.Lookup("status/404.tmpl").Execute(w, data.toRender(t, nil))
 }
 
@@ -98,5 +135,10 @@ func (t *TemplateRender) Render5xx(w io.Writer, data *RenderData) {
 		}
 		stackBuff = make([]byte, 2*len(stackBuff))
 	}
+
+	if httpWrite, ok := w.(http.ResponseWriter); ok {
+		httpWrite.WriteHeader(http.StatusInternalServerError)
+	}
+
 	t.Root.Lookup("status/500.tmpl").Execute(w, data.toRender(t, stackBuff))
 }

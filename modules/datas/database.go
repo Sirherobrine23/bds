@@ -7,9 +7,9 @@ import (
 	zfg "github.com/chaindead/zerocfg"
 
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/server"
-	"sirherobrine23.com.br/go-bds/bds/modules/datas/token"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/user"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas/user/cookie"
+	"sirherobrine23.com.br/go-bds/bds/modules/datas/user/token"
 
 	_ "sirherobrine23.com.br/go-bds/bds/modules/datas/internal/sqlclients" // Load database clients
 )
@@ -23,37 +23,50 @@ var (
 type DatabaseSchemas struct {
 	Database *sql.DB // Drive connection
 
-	User    user.UserSearch   // User database
-	Token   token.Token       // Token database
-	Cookie  cookie.Cookie     // Web cookies
-	Servers server.ServerList // Servers
+	User    *user.UserSearch   // User database
+	Token   *token.Token       // Token database
+	Cookie  *cookie.Cookie     // Web cookies
+	Servers *server.ServerList // Servers
 }
 
-func Connect() (dbs *DatabaseSchemas, err error) {
-	dbs = &DatabaseSchemas{}
-	if dbs.Database, err = sql.Open(*Driver, *Host); err != nil {
-		return nil, err
+func Connect() (*DatabaseSchemas, error) {
+	db, err := sql.Open(*Driver, *Host)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open database: %s", err)
+	}
+
+	rootDB := &DatabaseSchemas{
+		Database: db,
+
+		User:    &user.UserSearch{Driver: *Driver, DB: db},
+		Token:   &token.Token{Driver: *Driver, DB: db},
+		Cookie:  &cookie.Cookie{Driver: *Driver, DB: db},
+		Servers: &server.ServerList{Driver: *Driver, DB: db},
 	}
 
 	switch *Driver {
 	case "sqlite3":
-		if err = user.SqliteStartTable(dbs.Database); err != nil {
+		if err = user.CreateSqliteTable(db); err != nil {
 			return nil, err
-		} else if err = cookie.SqliteStartTable(dbs.Database); err != nil {
+		} else if err = token.SqliteStartTable(db); err != nil {
 			return nil, err
-		} else if err = token.SqliteStartTable(dbs.Database); err != nil {
+		} else if err = cookie.CreateSqliteTable(db); err != nil {
 			return nil, err
-		} else if err = server.SqliteStartTable(dbs.Database); err != nil {
+		} else if err = server.CreateSqliteTable(db); err != nil {
 			return nil, err
 		}
-		dbs.User, dbs.Token, dbs.Cookie = user.SqliteSearch(dbs.Database), token.SqliteToken(dbs.Database), cookie.SqliteCookie(dbs.Database)
-		return
 	case "postgres":
+		fallthrough
 	case "mysql":
+		fallthrough
 	case "mssql":
+		fallthrough
 	case "sqlserver":
+		fallthrough
+	default:
+		db.Close()
+		return nil, fmt.Errorf("database not supported by bds dashboard")
 	}
 
-	dbs.Database.Close()
-	return nil, fmt.Errorf("database not supported by bds dashboard")
+	return rootDB, nil
 }
