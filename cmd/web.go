@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	httpserver "sirherobrine23.com.br/go-bds/bds/modules/http_server"
-	"sirherobrine23.com.br/go-bds/bds/modules/web"
+	"sirherobrine23.com.br/go-bds/bds/modules/router"
 )
 
 // Web subcommand
@@ -38,7 +38,7 @@ var Web = &cli.Command{
 		}
 
 		// Web interface
-		httpWeb, err := web.MountRouter(&web.WebConfig{DatabaseSchemas: databaseConnection})
+		httpWeb, err := router.WebRouter(databaseConnection)
 		if err != nil {
 			return err
 		}

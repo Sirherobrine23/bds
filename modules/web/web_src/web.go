@@ -3,7 +3,12 @@
 // Package with static files
 package static
 
-import "embed"
+import (
+	"embed"
+	"os"
+)
 
 //go:embed css/* img/* fonts/* js/*
-var StaticFiles embed.FS
+var _StaticFiles embed.FS
+
+var StaticFiles = os.DirFS("./modules/web/web_src")

@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS "servers" (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   server_type INTEGER NOT NULL,
-  server_version TEXT NOT NULL
+  server_version TEXT NOT NULL,
+  status INTEGER DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS "servers_permission" (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

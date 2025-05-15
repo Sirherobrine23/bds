@@ -1,0 +1,28 @@
+@import url(./status.css);
+
+main {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 900px;
+}
+
+main .server_info {
+  min-width: 75%;
+  padding: 3px;
+  border-radius: 8px;
+}
+
+@media (min-width: 800px) {
+  main {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (min-width: 1250px) {
+  main {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+  }
+}

@@ -37,6 +37,37 @@ var serverNames = []string{
 
 func (s ServerType) String() string { return serverNames[s] }
 
+type ServerStatus int
+
+const (
+	Stoped ServerStatus = iota
+	Running
+	Starting
+	Stoping
+	Updating
+	Installing
+)
+
+func (status ServerStatus) String() string {
+	switch status {
+	case Stoped:
+		return "stoped"
+	case Running:
+		return "running"
+	case Starting:
+		return "starting"
+	case Stoping:
+		return "stoping"
+	case Updating:
+		return "updating"
+	case Installing:
+		return "installing"
+	default:
+		return "unknown"
+	}
+}
+
+
 type ServerOwner struct {
 	Permission permission.Permission // User permission in server
 	User       *user.User            // User
@@ -55,11 +86,12 @@ func (s ServerOwners) UserID(id int64) (*ServerOwner, bool) {
 
 // Server
 type Server struct {
-	ID            int64          // Server id
-	Name          string         // Server name
-	ServerType    ServerType     // Server type
-	ServerVersion string         // Server version
+	ID            int64        // Server id
+	Name          string       // Server name
+	ServerVersion string       // Server version
+	ServerType    ServerType   // Server type
 	Owners        ServerOwners // Server owners
+	Status        ServerStatus // Server Status
 }
 
 type ServerList struct {
@@ -89,6 +121,10 @@ func (serverDB *ServerList) ByID(id int64) (*Server, error) {
 
 // Create server
 func (serverDB *ServerList) CreateServer(name, serverVersion string, serverType ServerType, owner *user.User) (*Server, error) {
+	if len(name) < 3 {
+		return nil, fmt.Errorf("set valid name length")
+	}
+
 	if serverVersion == "latest" {
 		switch serverType {
 		case Bedrock:

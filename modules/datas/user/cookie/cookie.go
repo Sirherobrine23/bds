@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"io"
 )
 
 type Cookie struct {
@@ -22,8 +23,8 @@ func (cookie *Cookie) Cookie(cookieValue string) (exist bool, userID int64, err 
 }
 
 func (cookie *Cookie) CreateCookie(userID int64) (cookieValue string, err error) {
-	cookieBytes := make([]byte, 12)
-	rand.Read(cookieBytes)
+	cookieBytes := make([]byte, 24)
+	io.ReadFull(rand.Reader, cookieBytes)
 	cookieBytes[0] = 'm'
 	cookieBytes[1] = 'a'
 	cookieBytes[2] = 'y'

@@ -1,11 +1,15 @@
-.serverRoot {
-}
-
-.serverNew {
-}
-
+@import url(./status.css);
 .serverList {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-content: space-evenly;
 }
 
-.serverList .serverInfo {
+.serverList .show_server>a,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none;
+  color: inherit;
 }

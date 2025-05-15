@@ -23,13 +23,13 @@ func CreateSqliteTable(conn *sql.DB) error {
 }
 
 func (server *ServerList) sqliteByID(id int64) (*Server, error) {
-	row := server.DB.QueryRow("SELECT id, name, server_type, server_version FROM servers WHERE id = $1", id)
+	row := server.DB.QueryRow("SELECT id, name, server_type, server_version, status FROM servers WHERE id = $1", id)
 	if err := row.Err(); err != nil {
 		return nil, err
 	}
 
 	userServer := &Server{Owners: []*ServerOwner{}}
-	if err := row.Scan(&userServer.ID, &userServer.Name, &userServer.ServerType, &userServer.ServerVersion); err != nil {
+	if err := row.Scan(&userServer.ID, &userServer.Name, &userServer.ServerType, &userServer.ServerVersion, &userServer.Status); err != nil {
 		return nil, err
 	}
 

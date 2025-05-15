@@ -8,13 +8,26 @@
       <a class="item" href="/servers">Servers</a>
     </div>
 		{{end}}
+    {{if .Server}}
+    <div class="item">
+      <a href="/servers/{{.Server.ID}}">Server Home</a>
+    </div>
+    <div class="item">
+      <a href="/servers/{{.Server.ID}}/software">Software</a>
+    </div>
+    {{end}}
   </div>
   <div class="navbar-right">
     {{if .User}}
+    <div class="item">
+      <a href="/servers/new">
+        <span>Create new server</span>
+      </a>
+    </div>
     <div class="item navbarUser">
-      <a href="/user" class="navUser">
+      <a href="/users/{{.User.ID}}" class="navUser">
         <span>{{.User.Username}}</span>
-        <img src="/user/img" width="30" height="30" aria-hidden="true">
+        <img src="/users/{{.User.ID}}/img" width="30" height="30" aria-hidden="true">
       </a>
     </div>
     {{else}}

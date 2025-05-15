@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"sirherobrine23.com.br/go-bds/bds/modules/api"
+	"sirherobrine23.com.br/go-bds/bds/modules/router"
 	"sirherobrine23.com.br/go-bds/bds/modules/datas"
 	httpserver "sirherobrine23.com.br/go-bds/bds/modules/http_server"
 
@@ -39,11 +39,6 @@ var API = &cli.Command{
 		}
 
 		// Start http server
-		httpRouter, err := api.MountRouter(&api.RouteConfig{DatabaseSchemas: databaseConnection})
-		if err != nil {
-			return err
-		}
-
-		return httpserver.ListenAndServe(ctx.String("listen"), httpRouter)
+		return httpserver.ListenAndServe(ctx.String("listen"), router.ApiRouter(databaseConnection))
 	},
 }
