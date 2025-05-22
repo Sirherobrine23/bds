@@ -1,9 +1,0 @@
-#loginarea {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#loginarea form > div {
-  padding: 1.3px;
-}

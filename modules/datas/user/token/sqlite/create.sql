@@ -1,8 +1,0 @@
-PRAGMA foreign_keys = ON;
-
-CREATE TABLE IF NOT EXISTS "token" (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER REFERENCES user (id) ON DELETE CASCADE,
-  token text NOT NULL UNIQUE,
-  permission INTEGER DEFAULT -1
-);
