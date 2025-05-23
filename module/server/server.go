@@ -26,9 +26,12 @@ type ServerFriends struct {
 
 // Server backup
 type ServerBackup struct {
-	ID       int64  `json:"id"`        // Backup ID
-	ServerID int64  `json:"server_id"` // Server reference, foregin key
-	UUID     string `json:"uuid"`      // Backup UUID
+	ID       int64     `json:"id"`        // Backup ID
+	ServerID int64     `json:"server_id"` // Server reference, foregin key
+	UUID     string    `json:"uuid"`      // Backup UUID
+	Software string    `json:"software"`  // Server software backuped
+	Version  string    `json:"version"`   // Server version
+	CreateAt time.Time `json:"create_at"` // Date of creation
 }
 
 // Runner info
