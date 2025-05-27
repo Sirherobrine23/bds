@@ -18,6 +18,15 @@ const (
 	UpdateServer                        // Update Server
 )
 
+func (ns *TokenPermissions) Check(permission TokenPermission) bool {
+	for _, p := range *ns {
+		if p == permission {
+			return true
+		}
+	}
+	return false
+}
+
 func (ns TokenPermission) String() string {
 	switch ns {
 	case CreateServer:
