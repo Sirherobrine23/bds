@@ -77,7 +77,7 @@ func NewSQLServerConnection(connectionString string) (Database, error) {
 		}
 		createScriptData = data
 	}
-	
+
 	// Check if the 'user' table exists to determine if schema setup is needed.
 	// This logic is specific to SQL Server.
 	var tableName string
@@ -142,10 +142,10 @@ func (sdb *SQLServerDB) Password(UserID int64) (*users.Password, error) {
 }
 
 func (sdb *SQLServerDB) CreateNewUser(user *users.User, password *users.Password) (*users.User, error) {
-	if err := password.HashPassword(); err != nil {
+	if err := password.HashPassword(*passwordToEncrypt); err != nil {
 		return nil, err
 	}
-	
+
 	var userID int64
 	// SQLServerUserInsert from file does not have OUTPUT. Use SQLServerUserInsertQueryWithOutput.
 	err := sdb.Connection.QueryRow(SQLServerUserInsertQueryWithOutput, user.Username, user.Name, user.Email).Scan(&userID)
@@ -166,9 +166,9 @@ func (sdb *SQLServerDB) CreateToken(user *users.User, perm ...users.TokenPermiss
 		return nil, err
 	}
 	tokenValue := hex.EncodeToString(newRandData)
-	
+
 	// Assuming users.TokenPermissions has a ToJSON method or implements driver.Valuer for JSON string
-	permissionsValue := users.TokenPermissions(perm) 
+	permissionsValue := users.TokenPermissions(perm)
 
 	token := new(users.Token)
 	// SQLServerTokenInsertQuery is the inline query with OUTPUT
@@ -185,7 +185,7 @@ func (sdb *SQLServerDB) Token(tokenStr string) (*users.Token, *users.User, error
 	row := sdb.Connection.QueryRow(SQLServerTokenSelectByTokenQuery, tokenStr)
 	if err := row.Err(); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil, io.EOF 
+			return nil, nil, io.EOF
 		}
 		return nil, nil, fmt.Errorf("querying token failed: %w", err)
 	}
@@ -211,7 +211,7 @@ func (sdb *SQLServerDB) UpdateToken(token *users.Token, newPerms ...users.TokenP
 		return fmt.Errorf("failed to get rows affected for token update: %w", err)
 	}
 	if rowsAffected == 0 {
-		return io.EOF 
+		return io.EOF
 	}
 	token.Permissions = permissionsValue
 	return nil
@@ -227,7 +227,7 @@ func (sdb *SQLServerDB) DeleteToken(token *users.Token) error {
 		return fmt.Errorf("failed to get rows affected for token deletion: %w", err)
 	}
 	if rowsAffected == 0 {
-		return io.EOF 
+		return io.EOF
 	}
 	return nil
 }
@@ -301,11 +301,19 @@ func (sdb *SQLServerDB) CreateServer(user *users.User, svr *server.Server) (*ser
 		return nil, fmt.Errorf("valid user required to create server")
 	}
 	newSvr := *svr
-	if newSvr.Owner == 0 { newSvr.Owner = user.UserID }
-	if newSvr.Software == "" { newSvr.Software = "bedrock" }
-	if newSvr.Version == "" { newSvr.Version = "latest" }
-	if newSvr.Name == "" { newSvr.Name = namesgenerator.GetRandomName(0) }
-	
+	if newSvr.Owner == 0 {
+		newSvr.Owner = user.UserID
+	}
+	if newSvr.Software == "" {
+		newSvr.Software = "bedrock"
+	}
+	if newSvr.Version == "" {
+		newSvr.Version = "latest"
+	}
+	if newSvr.Name == "" {
+		newSvr.Name = namesgenerator.GetRandomName(0)
+	}
+
 	var serverID int64
 	// SQLServerInsertServer from file does not have OUTPUT. Use SQLServerInsertServerQueryWithOutput.
 	err := sdb.Connection.QueryRow(SQLServerInsertServerQueryWithOutput,
@@ -441,19 +449,3 @@ func (sdb *SQLServerDB) ServerBackups(serverID int64) ([]*server.ServerBackup, e
 	}
 	return backupsList, nil
 }
-
-// Note on permissions types (users.TokenPermissions, server.ServerPermissions):
-// This implementation assumes that these types (or their ToJSON/FromJSON methods as used in mssql.go,
-// or direct passing if they implement sql.Scanner/driver.Valuer) correctly handle
-// conversion to/from a string representation suitable for NVARCHAR(MAX) in SQL Server.
-// The mssql.go implementation used placeholder ToJSON/FromJSON calls for clarity if direct
-// Scan/Value was not implemented. For SQLServer, the same assumption holds:
-// if users.TokenPermissions and server.ServerPermissions implement sql.Scanner and driver.Valuer,
-// they can be used directly. Otherwise, explicit marshaling to a JSON string is needed.
-// The `CreateToken` method in this `sqlserver.go` file passes `permissionsValue` directly,
-// assuming it implements `driver.Valuer`. If it doesn't, it should be `permissionsValue.ToJSON()`
-// similar to how it was in the reference mssql.go. For consistency with the copied logic,
-// I'll ensure the direct pass-through implies these interfaces are implemented.
-// The provided inline queries for MSSQL/SQLServer for token/cookie creation already include all fields in OUTPUT,
-// so `token.Permissions` and `friend.Permission` are scanned directly. This implies they implement `sql.Scanner`.
-```

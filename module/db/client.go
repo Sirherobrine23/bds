@@ -21,7 +21,8 @@ var (
 	ErrServerNotExists error = errors.New("server not exists")
 	ErrUserNotExists   error = errors.New("user not exists")
 
-	DefaultCookieTime = time.Hour * 24 * 7 * 30 * 15
+	DefaultCookieTime         = time.Hour * 24 * 7 * 30 * 15
+	passwordToEncrypt *string = new(string)
 )
 
 // Database interface

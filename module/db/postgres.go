@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/docker/docker/pkg/namesgenerator"
+	_ "github.com/lib/pq" // PostgreSQL driver
 
 	"sirherobrine23.com.br/go-bds/bds/module/server"
 	"sirherobrine23.com.br/go-bds/bds/module/users"
@@ -130,7 +130,7 @@ func (pg *PostgresDB) Password(UserID int64) (*users.Password, error) {
 }
 
 func (pg *PostgresDB) CreateNewUser(user *users.User, password *users.Password) (*users.User, error) {
-	if err := password.HashPassword(); err != nil {
+	if err := password.HashPassword(*passwordToEncrypt); err != nil {
 		return nil, err
 	}
 
@@ -288,10 +288,18 @@ func (pg *PostgresDB) CreateServer(user *users.User, svr *server.Server) (*serve
 		return nil, fmt.Errorf("valid user required to create server")
 	}
 	newSvr := *svr
-	if newSvr.Owner == 0 { newSvr.Owner = user.UserID }
-	if newSvr.Software == "" { newSvr.Software = "bedrock" }
-	if newSvr.Version == "" { newSvr.Version = "latest" }
-	if newSvr.Name == "" { newSvr.Name = namesgenerator.GetRandomName(0) }
+	if newSvr.Owner == 0 {
+		newSvr.Owner = user.UserID
+	}
+	if newSvr.Software == "" {
+		newSvr.Software = "bedrock"
+	}
+	if newSvr.Version == "" {
+		newSvr.Version = "latest"
+	}
+	if newSvr.Name == "" {
+		newSvr.Name = namesgenerator.GetRandomName(0)
+	}
 
 	var serverID int64
 	// PostgresInsertServerFile from sql/server/server_insert/postgresql.sql is: INSERT INTO "server"("owner", "name", software, "version") VALUES ($1, $2, $3, $4);

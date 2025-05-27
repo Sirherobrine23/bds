@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql" // MySQL driver
 	"github.com/docker/docker/pkg/namesgenerator"
+	_ "github.com/go-sql-driver/mysql" // MySQL driver
 
 	"sirherobrine23.com.br/go-bds/bds/module/server"
 	"sirherobrine23.com.br/go-bds/bds/module/users"
@@ -18,9 +18,9 @@ import (
 
 var (
 	MysqlCreateTables, _        = SQL.ReadFile("sql/create/mysql.sql")
-	MysqlUserInsertFile, _      = SQL.ReadFile("sql/user/create/mysql.sql") 
+	MysqlUserInsertFile, _      = SQL.ReadFile("sql/user/create/mysql.sql")
 	MysqlUserInsertPassword, _  = SQL.ReadFile("sql/user/create/mysql_password.sql")
-	MysqlInsertServerFile, _    = SQL.ReadFile("sql/server/server_insert/mysql.sql") 
+	MysqlInsertServerFile, _    = SQL.ReadFile("sql/server/server_insert/mysql.sql")
 	MysqlUserServers, _         = SQL.ReadFile("sql/server/server_list/mysql.sql")
 	MysqlServerByID, _          = SQL.ReadFile("sql/server/server_list/mysql_id.sql")
 	MysqlUpdateServer, _        = SQL.ReadFile("sql/server/update_server/mysql.sql")
@@ -34,13 +34,13 @@ var (
 	MysqlUsernameSelectQuery         = "SELECT id, username, `name`, email, create_at, update_at FROM `user` WHERE username = LOWER(?)"
 	MysqlUserIDSelectQuery           = "SELECT id, username, `name`, email, create_at, update_at FROM `user` WHERE id = ?"
 	MysqlPasswordSelectQuery         = "SELECT `user`, `password`, update_at FROM `password` WHERE `user` = ?"
-	MysqlTokenInsertQuery            = "INSERT INTO `token` (`user`, token, permissions) VALUES (?, ?, ?)" 
-	MysqlTokenSelectByTokenQuery     = "SELECT id, `user`, token, permissions, create_at, update_at FROM `token` WHERE token = ?" 
-	MysqlTokenUpdatePermissionsQuery = "UPDATE `token` SET permissions = ? WHERE token = ?" 
-	MysqlTokenDeleteQuery            = "DELETE FROM `token` WHERE token = ?" 
-	MysqlCookieInsertQuery           = "INSERT INTO `cookie` (`user`, cookie) VALUES (?, ?)" 
-	MysqlCookieDeleteQuery           = "DELETE FROM `cookie` WHERE cookie = ?" 
-	MysqlCookieSelectUserQuery       = "SELECT `user`, create_at FROM `cookie` WHERE cookie = ?" 
+	MysqlTokenInsertQuery            = "INSERT INTO `token` (`user`, token, permissions) VALUES (?, ?, ?)"
+	MysqlTokenSelectByTokenQuery     = "SELECT id, `user`, token, permissions, create_at, update_at FROM `token` WHERE token = ?"
+	MysqlTokenUpdatePermissionsQuery = "UPDATE `token` SET permissions = ? WHERE token = ?"
+	MysqlTokenDeleteQuery            = "DELETE FROM `token` WHERE token = ?"
+	MysqlCookieInsertQuery           = "INSERT INTO `cookie` (`user`, cookie) VALUES (?, ?)"
+	MysqlCookieDeleteQuery           = "DELETE FROM `cookie` WHERE cookie = ?"
+	MysqlCookieSelectUserQuery       = "SELECT `user`, create_at FROM `cookie` WHERE cookie = ?"
 
 	// Additional query needed for CreateCookie to fetch all fields
 	MysqlCookieSelectFullQuery = "SELECT id, `user`, cookie, create_at FROM `cookie` WHERE cookie = ?"
@@ -64,7 +64,7 @@ func NewMysqlConnection(connectionString string) (Database, error) {
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping mysql database: %w", err)
 	}
-	
+
 	// Ensure create script is loaded, handling potential silent failures from embed
 	var createScriptData []byte = MysqlCreateTables
 	if len(createScriptData) == 0 {
@@ -130,7 +130,7 @@ func (mdb *MysqlDB) Password(UserID int64) (*users.Password, error) {
 }
 
 func (mdb *MysqlDB) CreateNewUser(user *users.User, password *users.Password) (*users.User, error) {
-	if err := password.HashPassword(); err != nil {
+	if err := password.HashPassword(*passwordToEncrypt); err != nil {
 		return nil, err
 	}
 
@@ -170,7 +170,7 @@ func (mdb *MysqlDB) CreateToken(user *users.User, perm ...users.TokenPermission)
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("failed to retrieve token after insert: %w", io.EOF) 
+			return nil, fmt.Errorf("failed to retrieve token after insert: %w", io.EOF)
 		}
 		return nil, fmt.Errorf("failed to scan token after insert: %w", err)
 	}
@@ -304,10 +304,18 @@ func (mdb *MysqlDB) CreateServer(user *users.User, svr *server.Server) (*server.
 		return nil, fmt.Errorf("valid user required to create server")
 	}
 	newSvr := *svr
-	if newSvr.Owner == 0 { newSvr.Owner = user.UserID }
-	if newSvr.Software == "" { newSvr.Software = "bedrock" }
-	if newSvr.Version == "" { newSvr.Version = "latest" }
-	if newSvr.Name == "" { newSvr.Name = namesgenerator.GetRandomName(0) }
+	if newSvr.Owner == 0 {
+		newSvr.Owner = user.UserID
+	}
+	if newSvr.Software == "" {
+		newSvr.Software = "bedrock"
+	}
+	if newSvr.Version == "" {
+		newSvr.Version = "latest"
+	}
+	if newSvr.Name == "" {
+		newSvr.Name = namesgenerator.GetRandomName(0)
+	}
 
 	result, err := mdb.Connection.Exec(string(MysqlInsertServerFile),
 		newSvr.Owner, newSvr.Name, newSvr.Software, newSvr.Version)

@@ -30,8 +30,6 @@ var (
 	SqliteUserInsert, _         = SQL.ReadFile("sql/user/create/sqlite.sql")
 	SqliteUserInsertPassword, _ = SQL.ReadFile("sql/user/create/sqlite_password.sql")
 
-	passwordToEncrypt *string = new(string)
-
 	_ Database = &Sqlite{}
 )
 
