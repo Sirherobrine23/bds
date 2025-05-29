@@ -16,6 +16,7 @@ const (
 	CreateServer                        // Create server
 	DeleteServer                        // Delete server
 	UpdateServer                        // Update Server
+	UserView                            // Show view user
 )
 
 func (ns *TokenPermissions) Check(permission TokenPermission) bool {

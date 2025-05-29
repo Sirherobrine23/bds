@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"sirherobrine23.com.br/go-bds/bds/module/db"
 	"sirherobrine23.com.br/go-bds/bds/module/server"
+	"sirherobrine23.com.br/go-bds/bds/module/users"
 )
 
 // Base of API router
@@ -21,8 +22,8 @@ var API = chi.NewMux()
 func ApiCaller(database db.Database) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add database to context
-		r = r.WithContext(context.WithValue(r.Context(), DatabaseContext, database))
-		API.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), DatabaseContext, database)
+		API.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -81,6 +82,7 @@ func init() {
 		})
 	})
 
+	// User server
 	API.Route("/server/{id:[0-9]+}", func(API chi.Router) {
 		API.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -178,6 +180,7 @@ func init() {
 			})
 		})
 
+		// Backup
 		API.Route("/backup", func(API chi.Router) {
 			// Get all backups
 			API.Get("/", func(w http.ResponseWriter, r *http.Request) {})
@@ -193,15 +196,143 @@ func init() {
 		})
 	})
 
+	// User servers
 	API.Route("/servers", func(API chi.Router) {
 		// Get user servers
-		API.Get("/", func(w http.ResponseWriter, r *http.Request) {})
+		API.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			user := User(r.Context())
+			if user == nil {
+				jsonResponse(w, http.StatusBadRequest, map[string]string{"error": "user not found"})
+				return
+			}
+
+			db := Database(r.Context())
+			servers, err := db.UserServers(user)
+			if err != nil {
+				switch err {
+				case io.EOF:
+					jsonResponse(w, http.StatusBadRequest, map[string]string{"error": "user not found"})
+				default:
+					jsonResponse(w, http.StatusInternalServerError, map[string]string{
+						"error":   "internal error",
+						"message": err.Error(),
+					})
+				}
+				return
+			}
+
+			jsonResponse(w, http.StatusOK, servers)
+		})
 
 		// Create new server
-		API.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+		API.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			user := User(r.Context())
+			if user == nil {
+				jsonResponse(w, http.StatusUnauthorized, map[string]string{"error": "user not found"})
+				return
+			}
+
+			var serverCreation ServerCreation
+			switch r.Header.Get("Content-Type") {
+			case "application/json", "application/json; charset=utf-8":
+				err := json.NewDecoder(r.Body).Decode(&serverCreation)
+				if err != nil {
+					jsonResponse(w, http.StatusBadRequest, map[string]string{"error": "invalid json", "message": err.Error()})
+					return
+				}
+			default:
+				jsonResponse(w, http.StatusBadRequest, map[string]string{"error": "invalid content type", "message": "only application/json is"})
+				return
+			}
+
+			db := Database(r.Context())
+			userServers, err := db.UserServers(user)
+			if err != nil {
+				switch err {
+				case io.EOF:
+					jsonResponse(w, http.StatusNotFound, map[string]string{"error": "user not found"})
+				default:
+					jsonResponse(w, http.StatusInternalServerError, map[string]string{
+						"error":   "internal error",
+						"message": err.Error(),
+					})
+				}
+				return
+			}
+
+			if serverIndex := slices.IndexFunc(userServers, func(server *server.Server) bool {
+				return server.Name == serverCreation.Name
+			}); serverIndex >= 0 {
+				jsonResponse(w, http.StatusBadRequest, map[string]any{
+					"error":  "server already exists",
+					"server": userServers[serverIndex],
+				})
+				return
+			}
+
+			serverInfo, err := db.CreateServer(user, &server.Server{
+				Name:     serverCreation.Name,
+				Software: serverCreation.Software,
+				Version:  serverCreation.Version,
+			})
+
+			if err != nil {
+				switch err {
+				case io.EOF:
+					jsonResponse(w, http.StatusNotFound, map[string]string{"error": "user not found"})
+				default:
+					jsonResponse(w, http.StatusInternalServerError, map[string]string{
+						"error":   "internal error",
+						"message": err.Error(),
+					})
+				}
+				return
+			}
+			jsonResponse(w, http.StatusCreated, serverInfo)
+		})
 	})
 
 	// Get user info
-	API.Get("/user", func(w http.ResponseWriter, r *http.Request) {})            // Current
-	API.Get("/user/{username}", func(w http.ResponseWriter, r *http.Request) {}) // username
+	API.Get("/user", func(w http.ResponseWriter, r *http.Request) {
+		user := User(r.Context())
+		if user == nil {
+			jsonResponse(w, http.StatusUnauthorized, map[string]string{"error": "user not found"})
+			return
+		}
+		jsonResponse(w, http.StatusOK, user)
+	})
+
+	// Username
+	API.Get("/user/{username}", func(w http.ResponseWriter, r *http.Request) {
+		token := Token(r.Context())
+		if token == nil {
+			jsonResponse(w, http.StatusUnauthorized, map[string]string{"error": "authoraztion", "message": "require token to access this route"})
+			return
+		} else if !token.Permissions.Check(users.UserView) {
+			jsonResponse(w, http.StatusForbidden, map[string]string{"error": "permission", "message": "you dont have permission to access this route"})
+			return
+		}
+
+		db := Database(r.Context())
+		user, err := db.Username(chi.URLParam(r, "username"))
+		if err != nil {
+			switch err {
+			case io.EOF:
+				jsonResponse(w, http.StatusNotFound, map[string]string{"error": "user not found"})
+			default:
+				jsonResponse(w, http.StatusInternalServerError, map[string]string{
+					"error":   "internal error",
+					"message": err.Error(),
+				})
+			}
+			return
+		}
+		jsonResponse(w, http.StatusOK, user)
+	})
+}
+
+type ServerCreation struct {
+	Name     string `json:"name"`
+	Software string `json:"software"`
+	Version  string `json:"version"`
 }
